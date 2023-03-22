@@ -8,6 +8,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { Session } from "next-auth";
+import Link from "next/link";
 
 interface props {
   children?: React.ReactNode;
@@ -25,22 +26,30 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
           <FontAwesomeIcon icon={faRocket} className="text-3xl text-sky-blue" />
         </div>
         <div className="flex flex-col items-center p-2">
-          <FontAwesomeIcon
-            icon={faClock}
-            className="mb-4 text-2xl text-sky-blue"
-          />
-          <FontAwesomeIcon
-            icon={faBook}
-            className="mb-4 text-2xl text-sky-blue"
-          />
-          <FontAwesomeIcon
-            icon={faChartPie}
-            className="mb-4 text-2xl text-sky-blue"
-          />
-          <FontAwesomeIcon
-            icon={faPeopleGroup}
-            className="mb-4 text-2xl text-sky-blue"
-          />
+          <Link href={"/dashboard"}>
+            <FontAwesomeIcon
+              icon={faClock}
+              className="mb-4 text-2xl text-sky-blue"
+            />
+          </Link>
+          <Link href={"/projects"}>
+            <FontAwesomeIcon
+              icon={faBook}
+              className="mb-4 text-2xl text-sky-blue"
+            />
+          </Link>
+          <Link href={"/reports"}>
+            <FontAwesomeIcon
+              icon={faChartPie}
+              className="mb-4 text-2xl text-sky-blue"
+            />
+          </Link>
+          <Link href={"/teams"}>
+            <FontAwesomeIcon
+              icon={faPeopleGroup}
+              className="mb-4 text-2xl text-sky-blue"
+            />
+          </Link>
         </div>
       </div>
       <div className="flex w-full flex-col">
@@ -51,7 +60,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
             src={user.image ? user.image : ""}
           />
         </div>
-        <div>{children}</div>
+        <div className="grow overflow-y-auto bg-neutral">{children}</div>
       </div>
     </div>
   );

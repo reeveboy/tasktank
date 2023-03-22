@@ -38,4 +38,20 @@ export const taskRouter = createTRPCRouter({
       });
       return tasks;
     }),
+  getProjectTasks: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const tasks = await ctx.prisma.task.findMany({
+        where: {
+          projectId: input.projectId,
+          user: {
+            id: ctx.session.user.id,
+          },
+        },
+        include: {
+          user: true,
+        },
+      });
+      return tasks;
+    }),
 });

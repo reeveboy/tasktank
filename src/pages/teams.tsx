@@ -2,13 +2,10 @@ import { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 import Layout from "~/Components/Layout";
 
-import { api } from "~/utils/api";
-
-const Dashboard: NextPage = () => {
+const Teams: NextPage = () => {
   const router = useRouter();
   const { data: session, status } = useSession({
     required: true,
@@ -18,31 +15,18 @@ const Dashboard: NextPage = () => {
     },
   });
 
-  // const { data } = api.team.getAll.useQuery();
-  // const { mutate, error } = api.team.create.useMutation();
-
-  // const createTeam = () => {
-  //   mutate(
-  //     { name: "Test" },
-  //     {
-  //       onSettled: (res) => {
-  //         console.log(res);
-  //       },
-  //     }
-  //   );
-  // };
   if (!session) return null;
 
   return (
     <>
       <Head>
-        <title>Tracker</title>
+        <title>Teams</title>
       </Head>
       <Layout session={session} route="Tracker">
-        hello
+        teams
       </Layout>
     </>
   );
 };
 
-export default Dashboard;
+export default Teams;
