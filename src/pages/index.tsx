@@ -4,14 +4,15 @@ import { signIn, signOut, useSession } from "next-auth/react";
 
 import { useRouter } from "next/router";
 
+
 const Home: NextPage = () => {
   const router = useRouter();
 
   const { data: session, status } = useSession();
 
-  if (session) {
-    router.push("/dashboard");
-  }
+  // if (session) {
+  //   router.push("/dashboard");
+  // }
 
   const login = () => {
     signIn();
