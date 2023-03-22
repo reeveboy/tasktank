@@ -46,26 +46,40 @@ const Project: NextPage = () => {
     projectId: selectedProject as string,
   });
 
+  const utils = api.useContext();
+
   const createTeam = (d: any) => {
-    teamMutation.mutate({ name: d.name });
+    teamMutation.mutate(
+      { name: d.teamName },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
     setShowTeamModal(false);
-    teams.refetch();
   };
 
   const createProject = (d: any) => {
-    projectMutation.mutate({ name: d.name, teamId: selectedTeam });
+    projectMutation.mutate(
+      { name: d.projectName, teamId: selectedTeam },
+      {
+        onSuccess: () => {
+          utils.project.getTeamProjects.invalidate({
+            teamId: selectedTeam as string,
+          });
+        },
+      }
+    );
     setShowProjectModal(false);
-    projects.refetch();
   };
 
   const selectTeam = (id: string) => {
     setSelectedTeam(id);
-    // projects.refetch();
   };
 
   const selectProject = (id: string) => {
     setSelectedProject(id);
-    // projects.refetch();
   };
 
   if (!session) return null;
@@ -82,9 +96,9 @@ const Project: NextPage = () => {
               <h1 className="text-xl font-bold text-dark">Create a team</h1>
               <div className="mt-2 flex w-full items-baseline">
                 <input
-                  {...register("name")}
+                  {...register("teamName")}
                   type="text"
-                  className="grow rounded-lg border border-carbon bg-neutral py-4 px-4 text-sm"
+                  className="text-md grow rounded-lg border border-carbon bg-neutral py-4 px-4"
                   required
                   placeholder="Enter team name"
                   minLength={3}
@@ -148,15 +162,15 @@ const Project: NextPage = () => {
                       className="flex flex-col"
                     >
                       <h1 className="text-xl font-bold text-dark">
-                        Create a team
+                        Create a project
                       </h1>
                       <div className="mt-2 flex w-full items-baseline">
                         <input
-                          {...register("name")}
+                          {...register("projectName")}
                           type="text"
                           className="grow rounded-lg border border-carbon bg-neutral py-4 px-4 text-sm"
                           required
-                          placeholder="Enter team name"
+                          placeholder="Enter project name"
                           minLength={3}
                         />
                         <button type="submit" className="ml-2">
@@ -242,7 +256,7 @@ const TeamItem: React.FC<any> = ({ team, selectTeam, selectedTeam }) => {
         onClick={onclick}
         className="flex w-full border bg-sky-blue p-4 transition-all hover:bg-sky-blue"
       >
-        <span className="grow text-lg font-semibold text-dark">
+        <span className="text-md grow font-semibold text-dark">
           {team.name}
         </span>
         <FontAwesomeIcon
@@ -258,7 +272,7 @@ const TeamItem: React.FC<any> = ({ team, selectTeam, selectedTeam }) => {
       onClick={onclick}
       className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue"
     >
-      <span className="grow text-lg font-semibold text-dark">{team.name}</span>
+      <span className="text-md grow font-semibold text-dark">{team.name}</span>
       <FontAwesomeIcon
         icon={faCircleChevronRight}
         className="text-2xl text-dark"
@@ -282,7 +296,7 @@ const ProjectItem: React.FC<any> = ({
         onClick={onclick}
         className="flex w-full border bg-sky-blue p-4 transition-all hover:bg-sky-blue"
       >
-        <span className="grow text-lg font-semibold text-dark">
+        <span className="text-md grow font-semibold text-dark">
           {project.name}
         </span>
         <FontAwesomeIcon
@@ -298,7 +312,7 @@ const ProjectItem: React.FC<any> = ({
       onClick={onclick}
       className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue"
     >
-      <span className="grow text-lg font-semibold text-dark">
+      <span className="text-md grow font-semibold text-dark">
         {project.name}
       </span>
       <FontAwesomeIcon
@@ -312,7 +326,7 @@ const ProjectItem: React.FC<any> = ({
 const TaskItem: React.FC<any> = ({ task }) => {
   return (
     <div className="flex w-full border bg-sky-blue p-4 transition-all">
-      <span className="grow text-lg font-semibold text-dark">{task.name}</span>
+      <span className="text-md grow font-semibold text-dark">{task.name}</span>
       <span>{task.user.name}</span>
     </div>
   );

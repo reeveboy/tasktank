@@ -29,25 +29,25 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
           <Link href={"/dashboard"}>
             <FontAwesomeIcon
               icon={faClock}
-              className="mb-4 text-2xl text-sky-blue"
+              className="mb-4 text-xl text-sky-blue"
             />
           </Link>
           <Link href={"/projects"}>
             <FontAwesomeIcon
               icon={faBook}
-              className="mb-4 text-2xl text-sky-blue"
+              className="mb-4 text-xl text-sky-blue"
             />
           </Link>
           <Link href={"/reports"}>
             <FontAwesomeIcon
               icon={faChartPie}
-              className="mb-4 text-2xl text-sky-blue"
+              className="mb-4 text-xl text-sky-blue"
             />
           </Link>
           <Link href={"/teams"}>
             <FontAwesomeIcon
               icon={faPeopleGroup}
-              className="mb-4 text-2xl text-sky-blue"
+              className="mb-4 text-xl text-sky-blue"
             />
           </Link>
         </div>
