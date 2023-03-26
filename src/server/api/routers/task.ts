@@ -5,7 +5,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 export const taskRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
-      z.object({ name: z.string(), projectId: z.string(), date: z.string() })
+      z.object({ name: z.string(), projectId: z.string(), date: z.date() })
     )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.task.create({
@@ -26,13 +26,20 @@ export const taskRouter = createTRPCRouter({
       });
     }),
   getDaysTasks: protectedProcedure
-    .input(z.object({ date: z.string() }))
+    .input(z.object({ date: z.date() }))
     .query(async ({ input, ctx }) => {
       const tasks = await ctx.prisma.task.findMany({
         where: {
           date: input.date,
           user: {
             id: ctx.session.user.id,
+          },
+        },
+        include: {
+          project: {
+            include: {
+              team: true,
+            },
           },
         },
       });

@@ -28,6 +28,9 @@ export const projectRouter = createTRPCRouter({
           },
         },
       },
+      include: {
+        team: true,
+      },
     });
   }),
   getTeamProjects: protectedProcedure
