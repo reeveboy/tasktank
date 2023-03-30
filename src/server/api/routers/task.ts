@@ -61,4 +61,24 @@ export const taskRouter = createTRPCRouter({
       });
       return tasks;
     }),
+  toggleComplete: protectedProcedure
+    .input(z.object({ taskId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const task = await ctx.prisma.task.findUnique({
+        where: {
+          id: input.taskId,
+        },
+      });
+      if (!task) {
+        throw new Error("Task not found");
+      }
+      return ctx.prisma.task.update({
+        where: {
+          id: input.taskId,
+        },
+        data: {
+          competed: !task.competed,
+        },
+      });
+    }),
 });

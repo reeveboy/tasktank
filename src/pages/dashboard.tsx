@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 
 import { api } from "~/utils/api";
 import { getToday } from "~/utils/getToday";
+import classNames from "classnames";
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
@@ -40,6 +41,8 @@ const Dashboard: NextPage = () => {
   const tasks = api.task.getDaysTasks.useQuery({ date: date });
 
   const taskMutation = api.task.create.useMutation();
+
+  const toggleTask = api.task.toggleComplete.useMutation();
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
@@ -79,6 +82,21 @@ const Dashboard: NextPage = () => {
       }
     );
   };
+
+  const updateComplete = (id: string) => {
+    toggleTask.mutate(
+      {
+        taskId: id,
+      },
+      {
+        onSuccess: () => {
+          utils.task.getDaysTasks.invalidate();
+        },
+      }
+    );
+  };
+
+  console.log(tasks.data);
 
   if (!session) return null;
 
@@ -121,10 +139,15 @@ const Dashboard: NextPage = () => {
               <tbody>
                 {tasks.data?.length ? (
                   tasks.data?.map((task) => (
-                    <tr className="border bg-neutral text-dark">
+                    <tr
+                      className={
+                        (classNames("border bg-neutral text-dark"),
+                        task.competed ? "line-through" : "")
+                      }
+                    >
                       <th
                         scope="row"
-                        className="whitespace-nowrap px-6 py-4 font-medium  "
+                        className="whitespace-nowrap px-6 py-4  font-medium"
                       >
                         {task.name}
                       </th>
@@ -135,11 +158,14 @@ const Dashboard: NextPage = () => {
                         <button className="text-lg">
                           <FontAwesomeIcon icon={faPenToSquare} />
                         </button>
-                        <button className="ml-4 text-lg">
-                          {1 == 1 ? (
-                            <FontAwesomeIcon icon={faSquare} />
-                          ) : (
+                        <button
+                          onClick={() => updateComplete(task.id)}
+                          className="ml-4 text-lg"
+                        >
+                          {task.competed ? (
                             <FontAwesomeIcon icon={faSquareCheck} />
+                          ) : (
+                            <FontAwesomeIcon icon={faSquare} />
                           )}
                         </button>
                         <button className="ml-4 text-lg">
