@@ -25,6 +25,42 @@ export const taskRouter = createTRPCRouter({
         },
       });
     }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        projectId: z.string(),
+        timeElapsed: z.string(),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.task.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          name: input.name,
+          project: {
+            connect: {
+              id: input.projectId,
+            },
+          },
+          timeElapsed: input.timeElapsed,
+        },
+      });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.task.delete({
+        where: {
+          id: input.id,
+        },
+      });
+    }),
+
   getDaysTasks: protectedProcedure
     .input(z.object({ date: z.date() }))
     .query(async ({ input, ctx }) => {

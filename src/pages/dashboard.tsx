@@ -5,7 +5,7 @@ import {
   faSquareCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Project } from "@prisma/client";
+import { Project, Task } from "@prisma/client";
 import { log } from "console";
 import { NextPage } from "next";
 import { useSession } from "next-auth/react";
@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { api } from "~/utils/api";
 import { getToday } from "~/utils/getToday";
 import classNames from "classnames";
+import { Modal } from "flowbite-react";
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
@@ -41,10 +42,15 @@ const Dashboard: NextPage = () => {
   const tasks = api.task.getDaysTasks.useQuery({ date: date });
 
   const taskMutation = api.task.create.useMutation();
+  const updateTaskMutation = api.task.update.useMutation();
 
   const toggleTask = api.task.toggleComplete.useMutation();
 
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [newProject, setNewProject] = useState<Project | null>(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -58,9 +64,20 @@ const Dashboard: NextPage = () => {
         setDate(new Date(e.target.value));
         utils.task.getDaysTasks.invalidate();
         break;
+      case "newProject":
+        setNewProject(
+          projects.data?.find((project) => project.id == value) ?? null
+        );
+        break;
       default:
         break;
     }
+  };
+
+  const selectTask = (task: any) => {
+    setSelectedTask(task);
+    setShowModal(true);
+    setNewProject(task.project);
   };
 
   const createTask = (d: any) => {
@@ -83,6 +100,28 @@ const Dashboard: NextPage = () => {
     );
   };
 
+  const updateTask = (d: any) => {
+    if (!selectedTask) return;
+
+    updateTaskMutation.mutate(
+      {
+        id: selectedTask.id,
+        name: d.newTaskName,
+        projectId: newProject!.id,
+        timeElapsed: d.newTimeElapsed,
+      },
+      {
+        onSuccess: () => {
+          utils.task.getDaysTasks.invalidate();
+
+          reset();
+          setSelectedProject(null);
+          setShowModal(false);
+        },
+      }
+    );
+  };
+
   const updateComplete = (id: string) => {
     toggleTask.mutate(
       {
@@ -95,8 +134,6 @@ const Dashboard: NextPage = () => {
       }
     );
   };
-
-  console.log(tasks.data);
 
   if (!session) return null;
 
@@ -155,7 +192,10 @@ const Dashboard: NextPage = () => {
                       <td className="px-6 py-4">{task.project.name}</td>
                       <td className="px-6 py-4">{task.project.team.name}</td>
                       <td className="px-6 py-4">
-                        <button className="text-lg">
+                        <button
+                          onClick={() => selectTask(task)}
+                          className="text-lg"
+                        >
                           <FontAwesomeIcon icon={faPenToSquare} />
                         </button>
                         <button
@@ -210,31 +250,21 @@ const Dashboard: NextPage = () => {
                 />
               </div>
               <p className="p-2"></p>
-              <div className="grid w-full grid-cols-1 gap-4">
-                <select
-                  className="block rounded-md border border-gray-300 bg-white py-2 px-3"
-                  name="project"
-                  onChange={handleChange}
-                >
-                  <option value="">Select Project</option>
-                  {projects.data?.map((project) => (
-                    <option value={project.id}>
-                      <div className="flex w-full justify-between">
-                        <span>{project.name} - </span>
-                        <span>{project.team.name}</span>
-                      </div>
-                    </option>
-                  ))}
-                </select>
-                {/* <select
-                className="block rounded-md border border-gray-300 bg-white py-2 px-3"
-                name="team"
-                disabled
-                value={selectedProject?.teamId}
+              <select
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                name="project"
+                onChange={handleChange}
               >
-                <option>{selectedProject?.team.name}</option>
-              </select> */}
-              </div>
+                <option value="">Select Project</option>
+                {projects.data?.map((project) => (
+                  <option value={project.id}>
+                    <div className="flex w-full justify-between">
+                      <span>{project.name} - </span>
+                      <span>{project.team.name}</span>
+                    </div>
+                  </option>
+                ))}
+              </select>
               <p className="p-2"></p>
               <div>
                 <button
@@ -247,6 +277,67 @@ const Dashboard: NextPage = () => {
             </form>
           </div>
         </div>
+        <Modal show={showModal}>
+          <div className="flex flex-col p-8">
+            <p className="text-center text-lg font-semibold">Edit Task</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(updateTask)}>
+              <div className="w-full">
+                <input
+                  {...register("newTaskName")}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                  type="text"
+                  minLength={3}
+                  placeholder={selectedTask?.name}
+                />
+                <p className="p-2"></p>
+                <input
+                  {...register("newTimeElapsed")}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                  type="text"
+                  minLength={3}
+                  placeholder={selectedTask?.timeElapsed}
+                />
+                <p className="p-2"></p>
+                <select
+                  className="block rounded-md border border-gray-300 bg-white py-2 px-3"
+                  name="newProject"
+                  onChange={handleChange}
+                >
+                  <option value={selectedTask?.project.id}>
+                    <span>{selectedTask?.project.name} - </span>
+                    <span>{selectedTask?.project.team.name}</span>
+                  </option>
+                  {projects.data?.map((project) => (
+                    <option value={project.id}>
+                      <div className="flex w-full justify-between">
+                        <span>{project.name} - </span>
+                        <span>{project.team.name}</span>
+                      </div>
+                    </option>
+                  ))}
+                </select>
+                <p className="p-2"></p>
+                <div className="flex justify-between">
+                  <button
+                    className=" rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
+                    type="submit"
+                  >
+                    Submit
+                  </button>
+                  <button
+                    className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <div></div>
+          </div>
+        </Modal>
       </Layout>
     </>
   );
