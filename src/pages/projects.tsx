@@ -16,6 +16,8 @@ import {
 import React, { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
+import classNames from "classnames";
+import { Team, Project as ProjectType } from "@prisma/client";
 
 const Project: NextPage = () => {
   const router = useRouter();
@@ -34,16 +36,16 @@ const Project: NextPage = () => {
 
   const teams = api.team.getAll.useQuery();
   const teamMutation = api.team.create.useMutation();
-  const [selectedTeam, setSelectedTeam] = useState<string>("");
+  const [selectedTeam, setSelectedTeam] = useState<Team>();
 
   const projects = api.project.getTeamProjects.useQuery({
-    teamId: selectedTeam as string,
+    teamId: selectedTeam?.id,
   });
   const projectMutation = api.project.create.useMutation();
-  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<ProjectType>();
 
   const tasks = api.task.getProjectTasks.useQuery({
-    projectId: selectedProject as string,
+    projectId: selectedProject?.id,
   });
 
   const utils = api.useContext();
@@ -62,24 +64,16 @@ const Project: NextPage = () => {
 
   const createProject = (d: any) => {
     projectMutation.mutate(
-      { name: d.projectName, teamId: selectedTeam },
+      { name: d.projectName, teamId: selectedTeam?.id },
       {
         onSuccess: () => {
           utils.project.getTeamProjects.invalidate({
-            teamId: selectedTeam as string,
+            teamId: selectedTeam?.id,
           });
         },
       }
     );
     setShowProjectModal(false);
-  };
-
-  const selectTeam = (id: string) => {
-    setSelectedTeam(id);
-  };
-
-  const selectProject = (id: string) => {
-    setSelectedProject(id);
   };
 
   if (!session) return null;
@@ -126,7 +120,7 @@ const Project: NextPage = () => {
           <div className="border">
             <div
               onClick={() => setShowTeamModal(true)}
-              className="flex w-full cursor-pointer border bg-neutral p-4 transition-all hover:bg-sky-blue"
+              className="flex w-full cursor-pointer border bg-neutral  px-4 py-3 transition-all hover:bg-sky-blue"
             >
               <span className="grow text-lg font-semibold text-dark">
                 Create a team
@@ -138,14 +132,22 @@ const Project: NextPage = () => {
             </div>
             {teams.data?.length ? (
               teams.data.map((team) => (
-                <TeamItem
-                  team={team}
-                  selectTeam={selectTeam}
-                  selectedTeam={selectedTeam}
-                />
+                <div
+                  onClick={() => setSelectedTeam(team)}
+                  className={classNames(
+                    "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
+                    selectedTeam?.id === team.id ? "bg-sky-blue" : "bg-neutral"
+                  )}
+                >
+                  <span className="text-md grow text-dark">{team.name}</span>
+                  <FontAwesomeIcon
+                    icon={faCircleChevronRight}
+                    className="text-2xl text-dark"
+                  />
+                </div>
               ))
             ) : (
-              <div className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue">
+              <div className="flex w-full border bg-neutral px-4 py-3 transition-all hover:bg-sky-blue">
                 <span className="grow text-lg font-light text-dark">
                   No teams...
                 </span>
@@ -194,7 +196,7 @@ const Project: NextPage = () => {
                 </Modal>
                 <div
                   onClick={() => setShowProjectModal(true)}
-                  className="flex w-full cursor-pointer border bg-neutral p-4 transition-all hover:bg-sky-blue"
+                  className="flex w-full cursor-pointer border bg-neutral px-4 py-3 transition-all hover:bg-sky-blue"
                 >
                   <span className="grow text-lg font-semibold text-dark">
                     Create a Project
@@ -206,11 +208,23 @@ const Project: NextPage = () => {
                 </div>
                 {projects.data?.length ? (
                   projects.data.map((project) => (
-                    <ProjectItem
-                      project={project}
-                      selectProject={selectProject}
-                      selectedProject={selectedProject}
-                    />
+                    <div
+                      onClick={() => setSelectedProject(project)}
+                      className={classNames(
+                        "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
+                        selectedProject?.id === project.id
+                          ? "bg-sky-blue"
+                          : "bg-neutral"
+                      )}
+                    >
+                      <span className="text-md grow text-dark">
+                        {project.name}
+                      </span>
+                      <FontAwesomeIcon
+                        icon={faCircleChevronRight}
+                        className="text-2xl text-dark"
+                      />
+                    </div>
                   ))
                 ) : (
                   <div className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue">
@@ -223,13 +237,20 @@ const Project: NextPage = () => {
             ) : null}
           </div>
           {selectedProject ? (
-            <div className="border bg-sky-blue">
+            <div className="border">
               <div>
                 {tasks.data?.length ? (
-                  tasks.data.map((task) => <TaskItem task={task} />)
+                  tasks.data.map((task) => (
+                    <div className="flex w-full border px-4 py-3 transition-all">
+                      <span className="text-md grow text-dark">
+                        {task.name}
+                      </span>
+                      <span>{task.user.name}</span>
+                    </div>
+                  ))
                 ) : (
-                  <div className="flex w-full border bg-sky-blue p-4 transition-all">
-                    <span className="grow text-lg font-light text-dark">
+                  <div className="flex w-full border px-4 py-3 transition-all">
+                    <span className="text-md grow font-light text-dark">
                       No tasks...
                     </span>
                   </div>
@@ -242,93 +263,6 @@ const Project: NextPage = () => {
         </div>
       </Layout>
     </>
-  );
-};
-
-const TeamItem: React.FC<any> = ({ team, selectTeam, selectedTeam }) => {
-  const onclick = () => {
-    selectTeam(team.id);
-  };
-
-  if (selectedTeam == team.id) {
-    return (
-      <div
-        onClick={onclick}
-        className="flex w-full border bg-sky-blue p-4 transition-all hover:bg-sky-blue"
-      >
-        <span className="text-md grow font-semibold text-dark">
-          {team.name}
-        </span>
-        <FontAwesomeIcon
-          icon={faCircleChevronRight}
-          className="text-2xl text-dark"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      onClick={onclick}
-      className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue"
-    >
-      <span className="text-md grow font-semibold text-dark">{team.name}</span>
-      <FontAwesomeIcon
-        icon={faCircleChevronRight}
-        className="text-2xl text-dark"
-      />
-    </div>
-  );
-};
-
-const ProjectItem: React.FC<any> = ({
-  project,
-  selectProject,
-  selectedProject,
-}) => {
-  const onclick = () => {
-    selectProject(project.id);
-  };
-
-  if (selectedProject == project.id) {
-    return (
-      <div
-        onClick={onclick}
-        className="flex w-full border bg-sky-blue p-4 transition-all hover:bg-sky-blue"
-      >
-        <span className="text-md grow font-semibold text-dark">
-          {project.name}
-        </span>
-        <FontAwesomeIcon
-          icon={faCircleChevronRight}
-          className="text-2xl text-dark"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      onClick={onclick}
-      className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue"
-    >
-      <span className="text-md grow font-semibold text-dark">
-        {project.name}
-      </span>
-      <FontAwesomeIcon
-        icon={faCircleChevronRight}
-        className="text-2xl text-dark"
-      />
-    </div>
-  );
-};
-
-const TaskItem: React.FC<any> = ({ task }) => {
-  return (
-    <div className="flex w-full border bg-sky-blue p-4 transition-all">
-      <span className="text-md grow font-semibold text-dark">{task.name}</span>
-      <span>{task.user.name}</span>
-    </div>
   );
 };
 

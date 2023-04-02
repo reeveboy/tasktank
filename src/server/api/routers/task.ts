@@ -82,8 +82,11 @@ export const taskRouter = createTRPCRouter({
       return tasks;
     }),
   getProjectTasks: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ projectId: z.string().nullish() }))
     .query(async ({ input, ctx }) => {
+      if (!input.projectId) {
+        return [];
+      }
       const tasks = await ctx.prisma.task.findMany({
         where: {
           projectId: input.projectId,

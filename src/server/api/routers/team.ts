@@ -28,5 +28,20 @@ export const teamRouter = createTRPCRouter({
       },
     });
   }),
+  getTeamMembers: protectedProcedure
+    .input(z.object({ id: z.string().nullish() }))
+    .query(({ input, ctx }) => {
+      if (!input.id) {
+        return [];
+      }
+      return ctx.prisma.team
+        .findUnique({
+          where: {
+            id: input.id,
+          },
+        })
+        .members();
+    }),
+
   // assignToTeam: protectedProcedure.mutation({id})
 });

@@ -1,5 +1,6 @@
 import { faSquare } from "@fortawesome/free-regular-svg-icons";
 import {
+  faPause,
   faPenToSquare,
   faPlay,
   faSquareCheck,
@@ -21,6 +22,8 @@ import { api } from "~/utils/api";
 import { getToday } from "~/utils/getToday";
 import classNames from "classnames";
 import { Modal } from "flowbite-react";
+import Stopwatch from "react-stopwatch";
+import { useStopwatch } from "react-timer-hook";
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
@@ -51,6 +54,18 @@ const Dashboard: NextPage = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const stopwatchOffset = new Date();
+
+  const {
+    seconds,
+    minutes,
+    hours,
+    pause,
+    start,
+    reset: resetWatch,
+  } = useStopwatch({ autoStart: false });
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
@@ -78,6 +93,25 @@ const Dashboard: NextPage = () => {
     setSelectedTask(task);
     setShowModal(true);
     setNewProject(task.project);
+  };
+
+  const handleStartActiveTask = (task: Task) => {
+    setActiveTask(task);
+
+    let time: number[] = [];
+    task.timeElapsed.split(":").forEach((n) => {
+      time.push(parseInt(n));
+    });
+
+    // @ts-ignore
+    stopwatchOffset.setSeconds(time[0] * 3600 + time[1] * 60 + time[2]);
+    resetWatch(stopwatchOffset, true);
+  };
+
+  const handleStopActiveTask = () => {
+    setActiveTask(null);
+
+    pause();
   };
 
   const createTask = (d: any) => {
@@ -154,6 +188,43 @@ const Dashboard: NextPage = () => {
             />
           </div>
           <hr />
+          <div className="mt-4 flex w-full items-center rounded-md py-4 px-3">
+            <div className="grow">
+              {activeTask ? activeTask?.name : "No task running"}
+            </div>
+            <p className="p-2"></p>
+            <div>
+              <p>
+                {hours}:{minutes}:{seconds}
+              </p>
+              {/* <Stopwatch
+                seconds={stopWatchParams.seconds}
+                minutes={stopWatchParams.minutes}
+                hours={stopWatchParams.hours}
+                autoStart={startTimer}
+                render={({ formatted }: any) => {
+                  return (
+                    <>
+                      <span className="text-4xl">{formatted}</span>
+                    </>
+                  );
+                }}
+              /> */}
+            </div>
+            <p className="p-2"></p>
+            <div>
+              {activeTask ? (
+                <button className="rounded-lg bg-watermelon px-6 py-2 text-neutral">
+                  Stop
+                </button>
+              ) : (
+                <button className="rounded-lg bg-starynight px-6 py-2 text-neutral">
+                  Start
+                </button>
+              )}
+            </div>
+          </div>
+          <hr />
           <div className="relative mt-4 overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-500 ">
               <thead className="bg-dark font-medium text-neutral ">
@@ -209,7 +280,17 @@ const Dashboard: NextPage = () => {
                           )}
                         </button>
                         <button className="ml-4 text-lg">
-                          <FontAwesomeIcon icon={faPlay} />
+                          {activeTask?.id === task.id ? (
+                            <FontAwesomeIcon
+                              onClick={() => handleStopActiveTask()}
+                              icon={faPause}
+                            />
+                          ) : (
+                            <FontAwesomeIcon
+                              onClick={() => handleStartActiveTask(task)}
+                              icon={faPlay}
+                            />
+                          )}
                         </button>
                       </td>
                     </tr>
