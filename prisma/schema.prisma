@@ -11,12 +11,6 @@ datasource db {
     relationMode = "prisma"
 }
 
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
 model Team {
     id        String    @id @default(cuid())
     name      String
@@ -24,6 +18,17 @@ model Team {
     updatedAt DateTime  @updatedAt
     members   User[]
     projects  Project[]
+    invites   Invite[]
+}
+
+model Project {
+    id        String   @id @default(cuid())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    tasks     Task[]
+    team      Team     @relation(fields: [teamId], references: [id])
+    teamId    String
 }
 
 model Task {
@@ -40,15 +45,26 @@ model Task {
     timeElapsed String   @default("00:00:00")
 }
 
-model Project {
-    id        String   @id @default(cuid())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    tasks     Task[]
-    team      Team     @relation(fields: [teamId], references: [id])
-    teamId    String
+model Invite {
+    id          String   @id @default(cuid())
+    email       String
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    team        Team     @relation(fields: [teamId], references: [id])
+    teamId      String
+    invitedBy   User     @relation(fields: [invitedById], references: [id])
+    invitedById String
+    status      String   @default("pending")
 }
+
+// model Notification {
+//     id        String   @id @default(cuid())
+//     message   String
+//     createdAt DateTime @default(now())
+//     updatedAt DateTime @updatedAt
+//     user      User     @relation(fields: [userId], references: [id])
+//     userId    String
+// }
 
 // Necessary for Next auth
 model Account {
@@ -87,6 +103,8 @@ model User {
     sessions      Session[]
     teams         Team[]
     tasks         Task[]
+    // notifications Notification[]
+    Invite        Invite[]
 }
 
 model VerificationToken {
