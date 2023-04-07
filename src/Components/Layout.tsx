@@ -4,11 +4,13 @@ import {
   faChartPie,
   faClock,
   faPeopleGroup,
+  faRightFromBracket,
   faRocket,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import { Session } from "next-auth";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 interface props {
   children?: React.ReactNode;
@@ -25,7 +27,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
         <div className="grid h-[50px] place-items-center p-2">
           <FontAwesomeIcon icon={faRocket} className="text-3xl text-sky-blue" />
         </div>
-        <div className="flex flex-col items-center p-2">
+        <div className="flex grow flex-col items-center p-2">
           <Link href={"/dashboard"}>
             <FontAwesomeIcon
               icon={faClock}
@@ -50,6 +52,14 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
               className="mb-4 text-xl text-sky-blue"
             />
           </Link>
+        </div>
+        <div>
+          <button onClick={() => signOut()}>
+            <FontAwesomeIcon
+              icon={faRightFromBracket}
+              className="mb-4 text-xl text-sky-blue"
+            />
+          </button>
         </div>
       </div>
       <div className="flex w-full flex-col">

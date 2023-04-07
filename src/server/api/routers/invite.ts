@@ -42,4 +42,81 @@ export const inviteRouter = createTRPCRouter({
       });
       return invite;
     }),
+
+  getInvite: protectedProcedure
+    .input(z.object({ inviteId: z.string().nullish() }))
+    .query(async ({ input, ctx }) => {
+      if (!input.inviteId) {
+        return null;
+      }
+      const invite = await ctx.prisma.invite.findUnique({
+        where: {
+          id: input.inviteId,
+        },
+        include: {
+          team: true,
+          invitedBy: true,
+        },
+      });
+
+      if (!invite) {
+        return null;
+      }
+
+      if (ctx.session.user.email !== invite.email) {
+        return null;
+      }
+
+      return invite;
+    }),
+
+  acceptInvite: protectedProcedure
+    .input(z.object({ inviteId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const invite = await ctx.prisma.invite.findUnique({
+        where: {
+          id: input.inviteId,
+        },
+      });
+      if (!invite) {
+        return null;
+      }
+      await ctx.prisma.team.update({
+        where: {
+          id: invite.teamId,
+        },
+        data: {
+          members: {
+            connect: {
+              id: ctx.session.user.id,
+            },
+          },
+        },
+      });
+      await ctx.prisma.invite.delete({
+        where: {
+          id: invite.id,
+        },
+      });
+      return invite;
+    }),
+
+  declineInvite: protectedProcedure
+    .input(z.object({ inviteId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const invite = await ctx.prisma.invite.findUnique({
+        where: {
+          id: input.inviteId,
+        },
+      });
+      if (!invite) {
+        return null;
+      }
+      await ctx.prisma.invite.delete({
+        where: {
+          id: invite.id,
+        },
+      });
+      return invite;
+    }),
 });
