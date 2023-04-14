@@ -22,9 +22,9 @@ import { api } from "~/utils/api";
 import { getToday } from "~/utils/getToday";
 import classNames from "classnames";
 import { Modal } from "flowbite-react";
-// import Stopwatch from "react-stopwatch";
 import { useStopwatch } from "react-timer-hook";
 import { formatTime } from "~/utils/formatTime";
+import MyStopwatch from "~/Components/Stopwatch";
 
 type TaskWithProjects = Prisma.TaskGetPayload<{
   include: {
@@ -52,13 +52,14 @@ const Dashboard: NextPage = () => {
 
   const utils = api.useContext();
 
+  // Queries
   const projects = api.project.getUserProjects.useQuery();
   const tasks = api.task.getDaysTasks.useQuery({ date: date });
 
+  // Mutations
   const taskMutation = api.task.create.useMutation();
   const updateTaskMutation = api.task.update.useMutation();
-
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const updateTimeMutation = api.task.updateTime.useMutation();
 
   // Modal Handlers
   const [showEditModal, setShowEditModal] = useState(false);
@@ -70,14 +71,14 @@ const Dashboard: NextPage = () => {
   );
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
-  const stopwatchOffset = new Date();
-
   const {
     seconds,
     minutes,
     hours,
-    pause,
+    days,
+    isRunning,
     start,
+    pause,
     reset: resetWatch,
   } = useStopwatch({ autoStart: false });
 
@@ -103,24 +104,35 @@ const Dashboard: NextPage = () => {
     setSelectedTask(null);
   };
 
-  // const handleStartActiveTask = (task: Task) => {
-  //   setActiveTask(task);
+  const handleStartActiveTask = (task: Task) => {
+    if (task.competed) return;
 
-  //   let time: number[] = [];
-  //   task.timeElapsed.split(":").forEach((n) => {
-  //     time.push(parseInt(n));
-  //   });
+    setActiveTask(task);
 
-  //   // @ts-ignore
-  //   stopwatchOffset.setSeconds(time[0] * 3600 + time[1] * 60 + time[2]);
-  //   resetWatch(stopwatchOffset, true);
-  // };
+    const stopwatchOffset = new Date();
+    stopwatchOffset.setSeconds(stopwatchOffset.getSeconds() + task.timeElapsed);
 
-  // const handleStopActiveTask = () => {
-  //   setActiveTask(null);
+    resetWatch(stopwatchOffset);
+  };
 
-  //   pause();
-  // };
+  const handleStopActiveTask = () => {
+    if (!activeTask) return;
+
+    pause();
+    const time = hours * 60 * 60 + minutes * 60 + seconds;
+    updateTimeMutation.mutate(
+      {
+        id: activeTask?.id,
+        time: time,
+      },
+      {
+        onSuccess: () => {
+          utils.task.getDaysTasks.invalidate();
+          setActiveTask(null);
+        },
+      }
+    );
+  };
 
   // Form handlers
   const createTask = (d: any) => {
@@ -191,38 +203,30 @@ const Dashboard: NextPage = () => {
               Add task
             </button>
           </div>
-          <div className="mt-4 flex w-full items-center rounded-md py-4 px-3">
+          <div className="mt-4 flex w-full items-center rounded-md border bg-starynight/40 py-4 px-3 text-sm">
             <div className="grow">
-              {activeTask ? activeTask?.name : "No task running"}
-            </div>
-            <p className="p-2"></p>
-            <div>
-              <p>
-                {hours}:{minutes}:{seconds}
-              </p>
-              {/* <Stopwatch
-                seconds={stopWatchParams.seconds}
-                minutes={stopWatchParams.minutes}
-                hours={stopWatchParams.hours}
-                autoStart={startTimer}
-                render={({ formatted }: any) => {
-                  return (
-                    <>
-                      <span className="text-4xl">{formatted}</span>
-                    </>
-                  );
-                }}
-              /> */}
+              {activeTask ? activeTask?.name : "No task running.."}
             </div>
             <p className="p-2"></p>
             <div>
               {activeTask ? (
-                <button className="rounded-lg bg-watermelon px-6 py-2 text-neutral">
-                  Stop
-                </button>
+                <div className="flex items-center">
+                  <div>
+                    <span>{hours.toString().padStart(2, "0")}</span>:
+                    <span>{minutes.toString().padStart(2, "0")}</span>:
+                    <span>{seconds.toString().padStart(2, "0")}</span>
+                  </div>
+                  <p className="p-1"></p>
+                  <button
+                    onClick={handleStopActiveTask}
+                    className="rounded-lg bg-watermelon px-6 py-2 text-neutral"
+                  >
+                    Stop
+                  </button>
+                </div>
               ) : (
                 <button className="rounded-lg bg-starynight px-6 py-2 text-neutral">
-                  Start
+                  Start a task
                 </button>
               )}
             </div>
@@ -277,12 +281,12 @@ const Dashboard: NextPage = () => {
                         <button className="ml-4 text-lg">
                           {activeTask?.id === task.id ? (
                             <FontAwesomeIcon
-                              // onClick={() => handleStopActiveTask()}
+                              onClick={handleStopActiveTask}
                               icon={faPause}
                             />
                           ) : (
                             <FontAwesomeIcon
-                              // onClick={() => handleStartActiveTask(task)}
+                              onClick={() => handleStartActiveTask(task)}
                               icon={faPlay}
                             />
                           )}

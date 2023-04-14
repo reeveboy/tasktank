@@ -48,13 +48,9 @@ const Reports: NextPage = () => {
     },
   });
 
-  // const chartData = api.project.getProjectChartData.useQuery();
   const chardata = api.task.getChartData.useQuery();
 
-  console.log(chardata.data);
-
   const labels = chardata.data?.map((d) => d.date.toLocaleDateString());
-
   const data = {
     labels,
     datasets: [
@@ -65,8 +61,6 @@ const Reports: NextPage = () => {
       },
     ],
   };
-
-  console.log(data);
 
   if (!session || chardata.isLoading) return null;
 

@@ -53,6 +53,19 @@ export const taskRouter = createTRPCRouter({
       });
     }),
 
+  updateTime: protectedProcedure
+    .input(z.object({ id: z.string(), time: z.number() }))
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.task.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          timeElapsed: input.time,
+        },
+      });
+    }),
+
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(({ input, ctx }) => {
