@@ -31,7 +31,8 @@ export const taskRouter = createTRPCRouter({
         id: z.string(),
         name: z.string(),
         projectId: z.string(),
-        timeElapsed: z.string(),
+        timeElapsed: z.number(),
+        complete: z.boolean(),
       })
     )
     .mutation(({ input, ctx }) => {
@@ -47,6 +48,7 @@ export const taskRouter = createTRPCRouter({
             },
           },
           timeElapsed: input.timeElapsed,
+          competed: input.complete,
         },
       });
     }),
@@ -120,4 +122,25 @@ export const taskRouter = createTRPCRouter({
         },
       });
     }),
+
+  getChartData: protectedProcedure.query(async ({ ctx }) => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 7);
+
+    const data = ctx.prisma.task.groupBy({
+      by: ["date"],
+      where: {
+        date: {
+          lte: endDate,
+          gte: startDate,
+        },
+      },
+      _sum: {
+        timeElapsed: true,
+      },
+    });
+
+    return data;
+  }),
 });

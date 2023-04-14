@@ -6,7 +6,7 @@ import {
   faSquareCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Project, Task } from "@prisma/client";
+import { Prisma, Project, Task } from "@prisma/client";
 import { log } from "console";
 import { NextPage } from "next";
 import { useSession } from "next-auth/react";
@@ -22,8 +22,19 @@ import { api } from "~/utils/api";
 import { getToday } from "~/utils/getToday";
 import classNames from "classnames";
 import { Modal } from "flowbite-react";
-import Stopwatch from "react-stopwatch";
+// import Stopwatch from "react-stopwatch";
 import { useStopwatch } from "react-timer-hook";
+import { formatTime } from "~/utils/formatTime";
+
+type TaskWithProjects = Prisma.TaskGetPayload<{
+  include: {
+    project: {
+      include: {
+        team: true;
+      };
+    };
+  };
+}>;
 
 const Dashboard: NextPage = () => {
   const router = useRouter();
@@ -47,13 +58,16 @@ const Dashboard: NextPage = () => {
   const taskMutation = api.task.create.useMutation();
   const updateTaskMutation = api.task.update.useMutation();
 
-  const toggleTask = api.task.toggleComplete.useMutation();
-
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [newProject, setNewProject] = useState<Project | null>(null);
 
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  // Modal Handlers
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+
+  // Seleted Task & Active Task States
+  const [selectedTask, setSelectedTask] = useState<TaskWithProjects | null>(
+    null
+  );
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
   const stopwatchOffset = new Date();
@@ -67,68 +81,63 @@ const Dashboard: NextPage = () => {
     reset: resetWatch,
   } = useStopwatch({ autoStart: false });
 
-  const handleChange = (e: any) => {
-    const { name, value } = e.target;
-    switch (name) {
-      case "project":
-        setSelectedProject(
-          projects.data?.find((project) => project.id == value) ?? null
-        );
-        break;
-      case "date":
-        setDate(new Date(e.target.value));
-        utils.task.getDaysTasks.invalidate();
-        break;
-      case "newProject":
-        setNewProject(
-          projects.data?.find((project) => project.id == value) ?? null
-        );
-        break;
-      default:
-        break;
-    }
+  // Button Handlers
+  const selectDate = (e: any) => {
+    setDate(new Date(e.target.value));
+    utils.task.getDaysTasks.invalidate();
   };
 
   const selectTask = (task: any) => {
     setSelectedTask(task);
-    setShowModal(true);
-    setNewProject(task.project);
+    setShowEditModal(true);
   };
 
-  const handleStartActiveTask = (task: Task) => {
-    setActiveTask(task);
-
-    let time: number[] = [];
-    task.timeElapsed.split(":").forEach((n) => {
-      time.push(parseInt(n));
-    });
-
-    // @ts-ignore
-    stopwatchOffset.setSeconds(time[0] * 3600 + time[1] * 60 + time[2]);
-    resetWatch(stopwatchOffset, true);
+  const closeAddTaskModal = () => {
+    setShowAddTaskModal(false);
+    reset();
   };
 
-  const handleStopActiveTask = () => {
-    setActiveTask(null);
-
-    pause();
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    reset();
+    setSelectedTask(null);
   };
 
+  // const handleStartActiveTask = (task: Task) => {
+  //   setActiveTask(task);
+
+  //   let time: number[] = [];
+  //   task.timeElapsed.split(":").forEach((n) => {
+  //     time.push(parseInt(n));
+  //   });
+
+  //   // @ts-ignore
+  //   stopwatchOffset.setSeconds(time[0] * 3600 + time[1] * 60 + time[2]);
+  //   resetWatch(stopwatchOffset, true);
+  // };
+
+  // const handleStopActiveTask = () => {
+  //   setActiveTask(null);
+
+  //   pause();
+  // };
+
+  // Form handlers
   const createTask = (d: any) => {
-    if (!selectedProject) return;
+    if (!d.project || !d.taskName) return;
 
     taskMutation.mutate(
       {
         name: d.taskName,
-        projectId: selectedProject?.id,
+        projectId: d.project,
         date: date,
       },
       {
         onSuccess: () => {
           utils.task.getDaysTasks.invalidate();
 
+          setShowAddTaskModal(false);
           reset();
-          setSelectedProject(null);
         },
       }
     );
@@ -140,30 +149,19 @@ const Dashboard: NextPage = () => {
     updateTaskMutation.mutate(
       {
         id: selectedTask.id,
-        name: d.newTaskName,
-        projectId: newProject!.id,
-        timeElapsed: d.newTimeElapsed,
+        name: d.newTaskName ? d.newTaskName : selectedTask.name,
+        projectId: d.newProject ? d.newProject : selectedTask.projectId,
+        timeElapsed: d.newTimeElapsed
+          ? parseInt(d.newTimeElapsed)
+          : selectedTask.timeElapsed,
+        complete: selectedTask.competed,
       },
       {
         onSuccess: () => {
           utils.task.getDaysTasks.invalidate();
 
+          setShowEditModal(false);
           reset();
-          setSelectedProject(null);
-          setShowModal(false);
-        },
-      }
-    );
-  };
-
-  const updateComplete = (id: string) => {
-    toggleTask.mutate(
-      {
-        taskId: id,
-      },
-      {
-        onSuccess: () => {
-          utils.task.getDaysTasks.invalidate();
         },
       }
     );
@@ -177,17 +175,22 @@ const Dashboard: NextPage = () => {
         <title>Tracker</title>
       </Head>
       <Layout session={session} route="Tracker">
-        <div className="flex flex-col p-8">
-          <div className="grid w-full place-items-center">
+        <div className="flex flex-col items-center p-8">
+          <div className="flex">
             <input
-              className="rounded-lg bg-dark px-8 py-2 font-semibold text-neutral"
+              className="rounded-lg bg-dark px-8 py-2 text-sm font-semibold text-neutral"
               type="date"
-              name="date"
               value={date.toISOString().substring(0, 10)}
-              onChange={handleChange}
+              onChange={selectDate}
             />
+            <p className="p-2"></p>
+            <button
+              onClick={() => setShowAddTaskModal(true)}
+              className="rounded-lg bg-starynight px-3 py-2 text-sm text-neutral"
+            >
+              Add task
+            </button>
           </div>
-          <hr />
           <div className="mt-4 flex w-full items-center rounded-md py-4 px-3">
             <div className="grow">
               {activeTask ? activeTask?.name : "No task running"}
@@ -224,8 +227,7 @@ const Dashboard: NextPage = () => {
               )}
             </div>
           </div>
-          <hr />
-          <div className="relative mt-4 overflow-x-auto">
+          <div className="relative mt-4 w-full overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-500 ">
               <thead className="bg-dark font-medium text-neutral ">
                 <tr>
@@ -259,7 +261,9 @@ const Dashboard: NextPage = () => {
                       >
                         {task.name}
                       </th>
-                      <td className="px-6 py-4">{task.timeElapsed}</td>
+                      <td className="px-6 py-4">
+                        {formatTime(task.timeElapsed)}
+                      </td>
                       <td className="px-6 py-4">{task.project.name}</td>
                       <td className="px-6 py-4">{task.project.team.name}</td>
                       <td className="px-6 py-4">
@@ -269,25 +273,16 @@ const Dashboard: NextPage = () => {
                         >
                           <FontAwesomeIcon icon={faPenToSquare} />
                         </button>
-                        <button
-                          onClick={() => updateComplete(task.id)}
-                          className="ml-4 text-lg"
-                        >
-                          {task.competed ? (
-                            <FontAwesomeIcon icon={faSquareCheck} />
-                          ) : (
-                            <FontAwesomeIcon icon={faSquare} />
-                          )}
-                        </button>
+
                         <button className="ml-4 text-lg">
                           {activeTask?.id === task.id ? (
                             <FontAwesomeIcon
-                              onClick={() => handleStopActiveTask()}
+                              // onClick={() => handleStopActiveTask()}
                               icon={faPause}
                             />
                           ) : (
                             <FontAwesomeIcon
-                              onClick={() => handleStartActiveTask(task)}
+                              // onClick={() => handleStartActiveTask(task)}
                               icon={faPlay}
                             />
                           )}
@@ -312,53 +307,9 @@ const Dashboard: NextPage = () => {
               </tbody>
             </table>
           </div>
-          <hr />
-          <div className="grid w-full place-items-center">
-            <form
-              onSubmit={handleSubmit(createTask)}
-              className="mt-4 flex w-1/2 flex-col items-center p-4"
-            >
-              <div className="w-full">
-                <p className="text-center text-lg font-semibold">Add Task</p>
-              </div>
-              <p className="p-2"></p>
-              <div className="w-full">
-                <input
-                  {...register("taskName")}
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
-                  type="text"
-                  minLength={3}
-                />
-              </div>
-              <p className="p-2"></p>
-              <select
-                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
-                name="project"
-                onChange={handleChange}
-              >
-                <option value="">Select Project</option>
-                {projects.data?.map((project) => (
-                  <option value={project.id}>
-                    <div className="flex w-full justify-between">
-                      <span>{project.name} - </span>
-                      <span>{project.team.name}</span>
-                    </div>
-                  </option>
-                ))}
-              </select>
-              <p className="p-2"></p>
-              <div>
-                <button
-                  className="rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
-                  type="submit"
-                >
-                  Add
-                </button>
-              </div>
-            </form>
-          </div>
+          <div className="grid w-full place-items-center"></div>
         </div>
-        <Modal show={showModal}>
+        <Modal show={showEditModal}>
           <div className="flex flex-col p-8">
             <p className="text-center text-lg font-semibold">Edit Task</p>
             <p className="p-2"></p>
@@ -375,22 +326,21 @@ const Dashboard: NextPage = () => {
                 <input
                   {...register("newTimeElapsed")}
                   className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
-                  type="text"
+                  type="number"
                   minLength={3}
-                  placeholder={selectedTask?.timeElapsed}
+                  placeholder={selectedTask?.timeElapsed.toLocaleString()}
                 />
                 <p className="p-2"></p>
                 <select
                   className="block rounded-md border border-gray-300 bg-white py-2 px-3"
-                  name="newProject"
-                  onChange={handleChange}
+                  {...register("newProject")}
+                  // onChange={handleChange}
                 >
-                  <option value={selectedTask?.project.id}>
-                    <span>{selectedTask?.project.name} - </span>
-                    <span>{selectedTask?.project.team.name}</span>
-                  </option>
                   {projects.data?.map((project) => (
-                    <option value={project.id}>
+                    <option
+                      selected={project.id == selectedTask?.projectId}
+                      value={project.id}
+                    >
                       <div className="flex w-full justify-between">
                         <span>{project.name} - </span>
                         <span>{project.team.name}</span>
@@ -398,6 +348,22 @@ const Dashboard: NextPage = () => {
                     </option>
                   ))}
                 </select>
+                <p className="p-2"></p>
+                <div className="flex items-center">
+                  <input
+                    checked={selectedTask?.competed}
+                    type="checkbox"
+                    onChange={() =>
+                      // @ts-ignore
+                      setSelectedTask((prev) => ({
+                        ...prev,
+                        competed: !selectedTask?.competed,
+                      }))
+                    }
+                  />
+                  <p className="p-1"></p>
+                  <label>Complete</label>
+                </div>
                 <p className="p-2"></p>
                 <div className="flex justify-between">
                   <button
@@ -407,16 +373,64 @@ const Dashboard: NextPage = () => {
                     Submit
                   </button>
                   <button
+                    type="button"
                     className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
-                    onClick={() => setShowModal(false)}
+                    onClick={closeEditModal}
                   >
                     Close
                   </button>
                 </div>
               </div>
             </form>
+          </div>
+        </Modal>
 
-            <div></div>
+        <Modal show={showAddTaskModal}>
+          <div className="flex flex-col p-8">
+            <p className="text-center text-lg font-semibold">Add Task</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createTask)}>
+              <div className="w-full">
+                <input
+                  {...register("taskName")}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                  type="text"
+                  minLength={3}
+                  placeholder="enter task name"
+                />
+              </div>
+              <p className="p-2"></p>
+              <select
+                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                {...register("project")}
+              >
+                <option value="">Select Project</option>
+                {projects.data?.map((project) => (
+                  <option value={project.id}>
+                    <div className="flex w-full justify-between">
+                      <span>{project.name} - </span>
+                      <span>{project.team.name}</span>
+                    </div>
+                  </option>
+                ))}
+              </select>
+              <p className="p-2"></p>
+              <div className="flex justify-between">
+                <button
+                  className=" rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
+                  onClick={closeAddTaskModal}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
           </div>
         </Modal>
       </Layout>

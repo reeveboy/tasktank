@@ -42,7 +42,7 @@ model Task {
     project     Project  @relation(fields: [projectId], references: [id])
     projectId   String
     competed    Boolean  @default(false)
-    timeElapsed String   @default("00:00:00")
+    timeElapsed Int      @default(0)
 }
 
 model Invite {
@@ -57,7 +57,6 @@ model Invite {
     status      String   @default("pending")
 }
 
-// messages(snd,sndgp,rec,message,time,status)
 model Message {
     id         String   @id @default(cuid())
     senderId   String
