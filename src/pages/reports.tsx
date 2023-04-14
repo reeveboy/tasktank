@@ -31,10 +31,6 @@ export const options = {
     legend: {
       position: "top" as const,
     },
-    title: {
-      display: true,
-      text: "Time Completed this week",
-    },
   },
 };
 
@@ -62,7 +58,7 @@ const Reports: NextPage = () => {
     ],
   };
 
-  if (!session || chardata.isLoading) return null;
+  if (!session) return null;
 
   return (
     <>
@@ -70,7 +66,12 @@ const Reports: NextPage = () => {
         <title>Reports</title>
       </Head>
       <Layout session={session} route="Reports">
-        <Bar options={options} data={data} />
+        <div className="flex flex-col p-4 text-lg font-semibold">
+          <p className="text-center">Total time completed this week</p>
+          <div className="grid scale-[0.8] place-items-center rounded-lg bg-white/50 px-2 py-4 shadow-lg">
+            <Bar options={options} data={data} />
+          </div>
+        </div>
       </Layout>
     </>
   );

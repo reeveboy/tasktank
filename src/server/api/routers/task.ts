@@ -152,6 +152,9 @@ export const taskRouter = createTRPCRouter({
       _sum: {
         timeElapsed: true,
       },
+      orderBy: {
+        date: "asc",
+      },
     });
 
     return data;

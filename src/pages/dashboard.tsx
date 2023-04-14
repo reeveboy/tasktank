@@ -1,18 +1,15 @@
-import { faSquare } from "@fortawesome/free-regular-svg-icons";
 import {
   faPause,
   faPenToSquare,
   faPlay,
-  faSquareCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Prisma, Project, Task } from "@prisma/client";
-import { log } from "console";
 import { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import Layout from "~/Components/Layout";
 
@@ -24,7 +21,6 @@ import classNames from "classnames";
 import { Modal } from "flowbite-react";
 import { useStopwatch } from "react-timer-hook";
 import { formatTime } from "~/utils/formatTime";
-import MyStopwatch from "~/Components/Stopwatch";
 
 type TaskWithProjects = Prisma.TaskGetPayload<{
   include: {
@@ -187,10 +183,10 @@ const Dashboard: NextPage = () => {
         <title>Tracker</title>
       </Head>
       <Layout session={session} route="Tracker">
-        <div className="flex flex-col items-center p-8">
+        <div className="flex flex-col items-center p-4">
           <div className="flex">
             <input
-              className="rounded-lg bg-dark px-8 py-2 text-sm font-semibold text-neutral"
+              className="rounded-lg bg-dark px-8 py-2 text-sm text-neutral"
               type="date"
               value={date.toISOString().substring(0, 10)}
               onChange={selectDate}
@@ -198,12 +194,12 @@ const Dashboard: NextPage = () => {
             <p className="p-2"></p>
             <button
               onClick={() => setShowAddTaskModal(true)}
-              className="rounded-lg bg-starynight px-3 py-2 text-sm text-neutral"
+              className="rounded-lg bg-starynight px-3 py-2 text-sm text-neutral hover:bg-starynight/80"
             >
               Add task
             </button>
           </div>
-          <div className="mt-4 flex w-full items-center rounded-md border bg-starynight/40 py-4 px-3 text-sm">
+          <div className="mt-4 flex w-full items-center rounded-md border bg-white/50 py-4 px-3 text-sm shadow-sm">
             <div className="grow">
               {activeTask ? activeTask?.name : "No task running.."}
             </div>
@@ -219,7 +215,7 @@ const Dashboard: NextPage = () => {
                   <p className="p-1"></p>
                   <button
                     onClick={handleStopActiveTask}
-                    className="rounded-lg bg-watermelon px-6 py-2 text-neutral"
+                    className="bg- rounded-lg px-6 py-2 text-neutral"
                   >
                     Stop
                   </button>
@@ -232,36 +228,36 @@ const Dashboard: NextPage = () => {
             </div>
           </div>
           <div className="relative mt-4 w-full overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-500 ">
-              <thead className="bg-dark font-medium text-neutral ">
+            <table className="w-full text-left text-sm text-gray-500 shadow-lg">
+              <thead className="bg-dark text-neutral ">
                 <tr>
-                  <th scope="col" className="rounded-l-lg px-6 py-3">
+                  <td scope="col" className="rounded-tl-lg px-6 py-3">
                     Task
-                  </th>
-                  <th scope="col" className="px-6 py-3">
+                  </td>
+                  <td scope="col" className="px-6 py-3">
                     Time Elapsed
-                  </th>
-                  <th scope="col" className="px-6 py-3">
+                  </td>
+                  <td scope="col" className="px-6 py-3">
                     Project
-                  </th>
-                  <th scope="col" className="px-6 py-3">
+                  </td>
+                  <td scope="col" className="px-6 py-3">
                     Team
-                  </th>
-                  <th scope="col" className="rounded-r-lg px-6 py-3"></th>
+                  </td>
+                  <td scope="col" className="rounded-tr-lg px-6 py-3"></td>
                 </tr>
               </thead>
               <tbody>
                 {tasks.data?.length ? (
                   tasks.data?.map((task) => (
                     <tr
-                      className={
-                        (classNames("border bg-neutral text-dark"),
-                        task.competed ? "line-through" : "")
-                      }
+                      className={classNames(
+                        "border bg-white/50 text-dark",
+                        task.competed ? "line-through" : ""
+                      )}
                     >
                       <th
                         scope="row"
-                        className="whitespace-nowrap px-6 py-4  font-medium"
+                        className="whitespace-nowrap px-6 py-4 font-medium"
                       >
                         {task.name}
                       </th>
@@ -314,14 +310,14 @@ const Dashboard: NextPage = () => {
           <div className="grid w-full place-items-center"></div>
         </div>
         <Modal show={showEditModal}>
-          <div className="flex flex-col p-8">
-            <p className="text-center text-lg font-semibold">Edit Task</p>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Edit Task</p>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(updateTask)}>
               <div className="w-full">
                 <input
                   {...register("newTaskName")}
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
                   type="text"
                   minLength={3}
                   placeholder={selectedTask?.name}
@@ -329,14 +325,14 @@ const Dashboard: NextPage = () => {
                 <p className="p-2"></p>
                 <input
                   {...register("newTimeElapsed")}
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
                   type="number"
                   minLength={3}
                   placeholder={selectedTask?.timeElapsed.toLocaleString()}
                 />
                 <p className="p-2"></p>
                 <select
-                  className="block rounded-md border border-gray-300 bg-white py-2 px-3"
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
                   {...register("newProject")}
                   // onChange={handleChange}
                 >
@@ -346,39 +342,43 @@ const Dashboard: NextPage = () => {
                       value={project.id}
                     >
                       <div className="flex w-full justify-between">
-                        <span>{project.name} - </span>
-                        <span>{project.team.name}</span>
+                        <span>
+                          Project {project.name} {"->"}{" "}
+                        </span>
+                        <span>Team {project.team.name}</span>
                       </div>
                     </option>
                   ))}
                 </select>
                 <p className="p-2"></p>
-                <div className="flex items-center">
-                  <input
-                    checked={selectedTask?.competed}
-                    type="checkbox"
-                    onChange={() =>
-                      // @ts-ignore
-                      setSelectedTask((prev) => ({
-                        ...prev,
-                        competed: !selectedTask?.competed,
-                      }))
-                    }
-                  />
-                  <p className="p-1"></p>
-                  <label>Complete</label>
+                <div className="grid w-full place-items-center">
+                  <div className="flex items-center">
+                    <input
+                      checked={selectedTask?.competed}
+                      type="checkbox"
+                      onChange={() =>
+                        // @ts-ignore
+                        setSelectedTask((prev) => ({
+                          ...prev,
+                          competed: !selectedTask?.competed,
+                        }))
+                      }
+                    />
+                    <p className="p-1"></p>
+                    <label className="text-sm">Complete</label>
+                  </div>
                 </div>
                 <p className="p-2"></p>
-                <div className="flex justify-between">
+                <div className="grid w-full grid-cols-2 gap-2">
                   <button
-                    className=" rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
+                    className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
                     type="submit"
                   >
                     Submit
                   </button>
                   <button
                     type="button"
-                    className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
+                    className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
                     onClick={closeEditModal}
                   >
                     Close
@@ -390,45 +390,45 @@ const Dashboard: NextPage = () => {
         </Modal>
 
         <Modal show={showAddTaskModal}>
-          <div className="flex flex-col p-8">
-            <p className="text-center text-lg font-semibold">Add Task</p>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Add Task</p>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(createTask)}>
-              <div className="w-full">
-                <input
-                  {...register("taskName")}
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
-                  type="text"
-                  minLength={3}
-                  placeholder="enter task name"
-                />
-              </div>
+              <input
+                {...register("taskName")}
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                type="text"
+                minLength={3}
+                placeholder="Enter Task Name"
+              />
               <p className="p-2"></p>
               <select
-                className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
                 {...register("project")}
               >
                 <option value="">Select Project</option>
                 {projects.data?.map((project) => (
                   <option value={project.id}>
                     <div className="flex w-full justify-between">
-                      <span>{project.name} - </span>
-                      <span>{project.team.name}</span>
+                      <span>
+                        Project {project.name} {"->"}{" "}
+                      </span>
+                      <span>Team {project.team.name}</span>
                     </div>
                   </option>
                 ))}
               </select>
               <p className="p-2"></p>
-              <div className="flex justify-between">
+              <div className="grid w-full grid-cols-2 gap-2">
                 <button
-                  className=" rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
+                  className="w-full rounded-lg bg-starynight  py-2 text-sm font-light text-neutral"
                   type="submit"
                 >
                   Submit
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
+                  className="w-full rounded-lg bg-red-500  py-2 text-sm font-light text-neutral"
                   onClick={closeAddTaskModal}
                 >
                   Close

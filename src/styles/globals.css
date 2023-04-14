@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=KoHo&display=swap");
-
 body {
-  font-family: "KoHo", sans-serif;
+  /* font-family: "KoHo", sans-serif; */
+  /* font-family: "Lato", sans-serif; */
+  font-family: "Inter", sans-serif;
 }
 
 input::-webkit-calendar-picker-indicator {

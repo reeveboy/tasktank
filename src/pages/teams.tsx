@@ -1,6 +1,7 @@
 import {
   faCircleChevronRight,
   faPlusCircle,
+  faVideoCamera,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Team, User } from "@prisma/client";
@@ -30,6 +31,7 @@ const Teams: NextPage = () => {
 
   const utils = api.useContext();
 
+  const [showTeamModal, setShowTeamModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -39,14 +41,32 @@ const Teams: NextPage = () => {
   const teamMembers = api.team.getTeamMembers.useQuery({
     id: selectedTeam?.id,
   });
-  const sendInviteMutation = api.invite.sendInvite.useMutation();
   const getChats = api.message.getChats.useQuery({
     recieverId: selectedMember?.id,
   });
+
+  const teamMutation = api.team.create.useMutation();
+  const sendInviteMutation = api.invite.sendInvite.useMutation();
   const sendDMMutation = api.message.sendDM.useMutation();
-  const updateStatusMutation = api.message.updateStatus.useMutation();
 
   const messageref = useRef<HTMLFormElement | null>(null);
+
+  const selectTeam = (team: Team) => {
+    setSelectedTeam(team);
+    setSelectedMember(null);
+  };
+
+  const createTeam = (d: any) => {
+    teamMutation.mutate(
+      { name: d.teamName },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
+    setShowTeamModal(false);
+  };
 
   const submitInvite = (d: any) => {
     console.log(d);
@@ -82,136 +102,113 @@ const Teams: NextPage = () => {
         <title>Teams</title>
       </Head>
       <Layout session={session} route="Teams">
-        <div className="grid h-full grid-cols-3">
-          <div className="border">
+        <div className="grid h-full grid-cols-3 p-4">
+          <div className="p-2">
+            <div
+              onClick={() => setShowTeamModal(true)}
+              className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+            >
+              <span className="text-md grow font-medium text-dark">
+                Create a team
+              </span>
+              <FontAwesomeIcon
+                icon={faPlusCircle}
+                className="text-2xl text-dark"
+              />
+            </div>
+            <p className="p-2"></p>
             {userTeams.data?.length ? (
               userTeams.data.map((team) => (
-                <div
-                  onClick={() => setSelectedTeam(team)}
-                  className={classNames(
-                    "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
-                    selectedTeam?.id === team.id ? "bg-sky-blue" : "bg-neutral"
-                  )}
-                >
-                  <span className="text-md grow text-dark">{team.name}</span>
-                  <FontAwesomeIcon
-                    icon={faCircleChevronRight}
-                    className="text-2xl text-dark"
-                  />
-                </div>
+                <>
+                  <div
+                    onClick={() => selectTeam(team)}
+                    className={classNames(
+                      "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                      selectedTeam?.id === team.id
+                        ? "bg-sky-blue"
+                        : "bg-white/50"
+                    )}
+                  >
+                    <span className="text-md grow text-dark">{team.name}</span>
+                    <FontAwesomeIcon
+                      icon={faCircleChevronRight}
+                      className="text-2xl text-dark"
+                    />
+                  </div>
+                  <p className="p-1"></p>
+                </>
               ))
             ) : (
-              <div className="flex w-full border bg-neutral px-4 py-3 transition-all hover:bg-sky-blue">
-                <span className="grow text-lg font-light text-dark">
+              <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
+                <span className="text-md grow font-light text-dark">
                   No teams...
                 </span>
               </div>
             )}
           </div>
-          <div className="border">
-            <Modal show={showInviteModal}>
-              <div className="flex flex-col p-8">
-                <p className="text-center text-lg font-semibold">
-                  Invite members
-                </p>
-                <p className="p-2"></p>
-                <form onSubmit={handleSubmit(submitInvite)}>
-                  <input
-                    {...register("emailTo")}
-                    className="block w-full rounded-md border border-gray-300 bg-white py-2 px-3"
-                    type="email"
-                    required
-                    minLength={3}
-                    placeholder="enter email address"
-                  />
-                  <p className="p-2"></p>
-                  <div className="flex justify-around">
-                    <button
-                      className=" rounded-lg bg-starynight px-20 py-2 font-semibold text-neutral"
-                      type="submit"
-                    >
-                      Submit
-                    </button>
-                    <button
-                      className="rounded-lg bg-watermelon px-20 py-2 font-semibold text-neutral"
-                      onClick={() => setShowInviteModal(false)}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </Modal>
+          <div className="p-2">
             {selectedTeam ? (
               <>
                 <div
                   onClick={() => setShowInviteModal(true)}
-                  className={classNames(
-                    "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
-                    "bg-neutral"
-                  )}
+                  className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
                 >
-                  <span className="text-md grow text-dark">Invite members</span>
+                  <span className="text-md grow font-medium text-dark">
+                    Invite members
+                  </span>
                   <FontAwesomeIcon
                     icon={faPlusCircle}
                     className="text-2xl text-dark"
                   />
                 </div>
+                <p className="p-2"></p>
                 {teamMembers.data?.length
                   ? teamMembers.data.map((member) => (
-                      <div
-                        onClick={() => setSelectedMember(member)}
-                        className={classNames(
-                          "flex w-full cursor-pointer items-center border px-4 py-2 transition-all hover:bg-sky-blue",
-                          selectedMember?.id === member.id
-                            ? "bg-sky-blue"
-                            : "bg-neutral"
-                        )}
-                      >
-                        <img
-                          className="h-8 w-8 rounded-full"
-                          src={member.image ? member.image : ""}
-                        />
-                        <p className="p-2"></p>
-                        <span className="text-md grow text-dark">
-                          {member.name}{" "}
-                          {member.id === session.user.id ? "(You)" : ""}
-                        </span>
-                        <FontAwesomeIcon
-                          icon={faCircleChevronRight}
-                          className="text-2xl text-dark"
-                        />
-                      </div>
+                      <>
+                        <div
+                          onClick={() => setSelectedMember(member)}
+                          className={classNames(
+                            "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                            selectedMember?.id === member.id
+                              ? "bg-sky-blue"
+                              : "bg-white/50"
+                          )}
+                        >
+                          <img
+                            className="h-8 w-8 rounded-full"
+                            src={member.image ? member.image : ""}
+                          />
+                          <p className="p-2"></p>
+                          <span className="grow text-sm text-dark">
+                            {member.name}{" "}
+                            {member.id === session.user.id ? "(You)" : ""}
+                          </span>
+                          <FontAwesomeIcon
+                            icon={faCircleChevronRight}
+                            className="text-2xl text-dark"
+                          />
+                        </div>
+                        <p className="p-1"></p>
+                      </>
                     ))
                   : null}
               </>
             ) : null}
           </div>
-          <div className="border">
+          <div className="p-2">
             {selectedMember ? (
               <div className="flex h-full flex-col">
-                <div className="flex w-full items-center justify-between bg-starynight py-4 px-6">
+                <div className="flex w-full items-center justify-between rounded-t-lg bg-sky-blue py-4 px-6">
                   <div className="flex">
-                    <svg
-                      className="w-6"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 512 512"
-                    >
-                      <path d="M399 384.2C376.9 345.8 335.4 320 288 320H224c-47.4 0-88.9 25.8-111 64.2c35.2 39.2 86.2 63.8 143 63.8s107.8-24.7 143-63.8zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256zm256 16a72 72 0 1 0 0-144 72 72 0 1 0 0 144z" />
-                    </svg>
-                    <p className="p-2"></p>
                     <div className="font-semibold">{selectedMember.name}</div>
                   </div>
-                  <svg
-                    className="w-5 cursor-pointer"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 576 512"
-                  >
-                    <path d="M0 128C0 92.7 28.7 64 64 64H320c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM559.1 99.8c10.4 5.6 16.9 16.4 16.9 28.2V384c0 11.8-6.5 22.6-16.9 28.2s-23 5-32.9-1.6l-96-64L416 337.1V320 192 174.9l14.2-9.5 96-64c9.8-6.5 22.4-7.2 32.9-1.6z" />
-                  </svg>
+                  <FontAwesomeIcon
+                    className="text-2xl text-dark"
+                    icon={faVideoCamera}
+                  />
                 </div>
 
-                <div className="grid h-full w-full content-between overflow-y-hidden bg-[#CAEBF2] p-4 pb-6 ">
+                <div className="grid h-full w-full content-between overflow-y-hidden bg-white/50 p-4 pb-6 ">
                   <div className=" container grid overflow-y-auto">
                     {getChats.data &&
                       getChats.data.map((chat) => (
@@ -222,21 +219,10 @@ const Teams: NextPage = () => {
                               : "mr-16 justify-self-start"
                           )}
                         >
-                          <div className="flex w-fit rounded-b-lg rounded-r-lg bg-[#0D253A] py-1 pl-3 pr-2 text-slate-200">
+                          <div className="flex w-fit rounded-b-lg rounded-r-lg bg-[#0D253A] py-1 pl-3 pr-2 text-sm text-slate-200">
                             {chat.message}
                             <div className="flex place-self-end pl-2 pb-0.5 text-xs text-cyan-200">
                               {chat.time.toISOString().slice(11, 16)}
-                              {chat.status == "read" ? (
-                                <svg
-                                  className="w-3 fill-cyan-200"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 512 512"
-                                >
-                                  <path d="M374.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 178.7l-57.4-57.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l80 80c12.5 12.5 32.8 12.5 45.3 0l160-160zm96 128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 402.7 86.6 297.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l256-256z" />
-                                </svg>
-                              ) : (
-                                <div></div>
-                              )}
                             </div>
                           </div>
                           <p className="p-1"></p>
@@ -252,7 +238,7 @@ const Teams: NextPage = () => {
                     <input
                       {...register("message")}
                       placeholder="message..."
-                      className="flex w-full items-center rounded-md bg-[#0D253A] px-4 py-2 pr-9 text-white"
+                      className="flex w-full items-center rounded-md bg-[#0D253A] px-4 py-2 pr-9 text-sm text-neutral"
                     ></input>
                     <button
                       type="submit"
@@ -272,6 +258,72 @@ const Teams: NextPage = () => {
             ) : null}
           </div>
         </div>
+
+        <Modal show={showTeamModal} className="rounded-lg">
+          <div className="flex flex-col px-8 py-6">
+            <h1 className="text-xl font-semibold text-dark">Create a team</h1>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createTeam)}>
+              <input
+                {...register("teamName")}
+                type="text"
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                required
+                placeholder="Enter team name"
+                minLength={3}
+              />
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowTeamModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal show={showInviteModal}>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-lg font-semibold text-dark">Invite members</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(submitInvite)}>
+              <input
+                {...register("emailTo")}
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                type="email"
+                required
+                minLength={3}
+                placeholder="Enter email address"
+              />
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowInviteModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
       </Layout>
     </>
   );

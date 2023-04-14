@@ -42,13 +42,20 @@ const Project: NextPage = () => {
     teamId: selectedTeam?.id,
   });
   const projectMutation = api.project.create.useMutation();
-  const [selectedProject, setSelectedProject] = useState<ProjectType>();
+  const [selectedProject, setSelectedProject] = useState<ProjectType | null>(
+    null
+  );
 
   const tasks = api.task.getProjectTasks.useQuery({
     projectId: selectedProject?.id,
   });
 
   const utils = api.useContext();
+
+  const selectTeam = (team: Team) => {
+    setSelectedTeam(team);
+    setSelectedProject(null);
+  };
 
   const createTeam = (d: any) => {
     teamMutation.mutate(
@@ -84,45 +91,13 @@ const Project: NextPage = () => {
         <title>Projects</title>
       </Head>
       <Layout session={session} route="Projects">
-        <Modal show={showTeamModal} className="rounded-lg">
-          <div className="flex w-full flex-col rounded-lg bg-neutral p-12">
-            <form onSubmit={handleSubmit(createTeam)} className="flex flex-col">
-              <h1 className="text-xl font-bold text-dark">Create a team</h1>
-              <div className="mt-2 flex w-full items-baseline">
-                <input
-                  {...register("teamName")}
-                  type="text"
-                  className="text-md grow rounded-lg border border-carbon bg-neutral py-4 px-4"
-                  required
-                  placeholder="Enter team name"
-                  minLength={3}
-                />
-                <button type="submit" className="ml-2">
-                  <FontAwesomeIcon
-                    icon={faPlusCircle}
-                    className="text-4xl text-dark"
-                  />
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-4">
-              <button
-                onClick={() => setShowTeamModal(false)}
-                className="rounded-lg bg-red-500 px-4 py-2 text-neutral"
-              >
-                close
-              </button>
-            </div>
-          </div>
-        </Modal>
-        <div className="grid h-full grid-cols-3">
-          <div className="border">
+        <div className="grid h-full grid-cols-3 p-4">
+          <div className="p-2">
             <div
               onClick={() => setShowTeamModal(true)}
-              className="flex w-full cursor-pointer border bg-neutral  px-4 py-3 transition-all hover:bg-sky-blue"
+              className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
             >
-              <span className="grow text-lg font-semibold text-dark">
+              <span className="text-md grow font-medium text-dark">
                 Create a team
               </span>
               <FontAwesomeIcon
@@ -130,75 +105,44 @@ const Project: NextPage = () => {
                 className="text-2xl text-dark"
               />
             </div>
+            <p className="p-2"></p>
             {teams.data?.length ? (
               teams.data.map((team) => (
-                <div
-                  onClick={() => setSelectedTeam(team)}
-                  className={classNames(
-                    "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
-                    selectedTeam?.id === team.id ? "bg-sky-blue" : "bg-neutral"
-                  )}
-                >
-                  <span className="text-md grow text-dark">{team.name}</span>
-                  <FontAwesomeIcon
-                    icon={faCircleChevronRight}
-                    className="text-2xl text-dark"
-                  />
-                </div>
+                <>
+                  <div
+                    onClick={() => selectTeam(team)}
+                    className={classNames(
+                      "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                      selectedTeam?.id === team.id
+                        ? "bg-sky-blue"
+                        : "bg-white/50"
+                    )}
+                  >
+                    <span className="text-md grow text-dark">{team.name}</span>
+                    <FontAwesomeIcon
+                      icon={faCircleChevronRight}
+                      className="text-2xl text-dark"
+                    />
+                  </div>
+                  <p className="p-1"></p>
+                </>
               ))
             ) : (
-              <div className="flex w-full border bg-neutral px-4 py-3 transition-all hover:bg-sky-blue">
-                <span className="grow text-lg font-light text-dark">
+              <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
+                <span className="text-md grow font-light text-dark">
                   No teams...
                 </span>
               </div>
             )}
           </div>
-          <div className="border">
+          <div className="p-2">
             {selectedTeam ? (
               <div>
-                <Modal show={showProjectModal} className="rounded-lg">
-                  <div className="flex w-full flex-col rounded-lg bg-neutral p-12">
-                    <form
-                      onSubmit={handleSubmit(createProject)}
-                      className="flex flex-col"
-                    >
-                      <h1 className="text-xl font-bold text-dark">
-                        Create a project
-                      </h1>
-                      <div className="mt-2 flex w-full items-baseline">
-                        <input
-                          {...register("projectName")}
-                          type="text"
-                          className="grow rounded-lg border border-carbon bg-neutral py-4 px-4 text-sm"
-                          required
-                          placeholder="Enter project name"
-                          minLength={3}
-                        />
-                        <button type="submit" className="ml-2">
-                          <FontAwesomeIcon
-                            icon={faPlusCircle}
-                            className="text-4xl text-dark"
-                          />
-                        </button>
-                      </div>
-                    </form>
-
-                    <div className="mt-4">
-                      <button
-                        onClick={() => setShowProjectModal(false)}
-                        className="rounded-lg bg-red-500 px-4 py-2 text-neutral"
-                      >
-                        close
-                      </button>
-                    </div>
-                  </div>
-                </Modal>
                 <div
                   onClick={() => setShowProjectModal(true)}
-                  className="flex w-full cursor-pointer border bg-neutral px-4 py-3 transition-all hover:bg-sky-blue"
+                  className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
                 >
-                  <span className="grow text-lg font-semibold text-dark">
+                  <span className="text-md grow font-medium text-dark">
                     Create a Project
                   </span>
                   <FontAwesomeIcon
@@ -206,29 +150,33 @@ const Project: NextPage = () => {
                     className="text-2xl text-dark"
                   />
                 </div>
+                <p className="p-2"></p>
                 {projects.data?.length ? (
                   projects.data.map((project) => (
-                    <div
-                      onClick={() => setSelectedProject(project)}
-                      className={classNames(
-                        "flex w-full cursor-pointer border px-4 py-3 transition-all hover:bg-sky-blue",
-                        selectedProject?.id === project.id
-                          ? "bg-sky-blue"
-                          : "bg-neutral"
-                      )}
-                    >
-                      <span className="text-md grow text-dark">
-                        {project.name}
-                      </span>
-                      <FontAwesomeIcon
-                        icon={faCircleChevronRight}
-                        className="text-2xl text-dark"
-                      />
-                    </div>
+                    <>
+                      <div
+                        onClick={() => setSelectedProject(project)}
+                        className={classNames(
+                          "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                          selectedProject?.id === project.id
+                            ? "bg-sky-blue"
+                            : "bg-white/50"
+                        )}
+                      >
+                        <span className="text-md grow text-dark">
+                          {project.name}
+                        </span>
+                        <FontAwesomeIcon
+                          icon={faCircleChevronRight}
+                          className="text-2xl text-dark"
+                        />
+                      </div>
+                      <p className="p-1"></p>
+                    </>
                   ))
                 ) : (
-                  <div className="flex w-full border bg-neutral p-4 transition-all hover:bg-sky-blue">
-                    <span className="grow text-lg font-light text-dark">
+                  <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
+                    <span className="text-md grow font-light text-dark">
                       No Projects...
                     </span>
                   </div>
@@ -237,19 +185,25 @@ const Project: NextPage = () => {
             ) : null}
           </div>
           {selectedProject ? (
-            <div className="border">
+            <div className="border p-2">
               <div>
                 {tasks.data?.length ? (
                   tasks.data.map((task) => (
-                    <div className="flex w-full border px-4 py-3 transition-all">
-                      <span className="text-md grow text-dark">
-                        {task.name}
-                      </span>
-                      <span>{task.user.name}</span>
-                    </div>
+                    <>
+                      <div
+                        className={classNames(
+                          "flex w-full cursor-pointer rounded-md bg-white/50 px-3 py-2 text-sm text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                          task.competed ? "line-through" : ""
+                        )}
+                      >
+                        <span className="text-md grow">{task.name}</span>
+                        <span>{task.user.name}</span>
+                      </div>
+                      <p className="p-1"></p>
+                    </>
                   ))
                 ) : (
-                  <div className="flex w-full border px-4 py-3 transition-all">
+                  <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
                     <span className="text-md grow font-light text-dark">
                       No tasks...
                     </span>
@@ -261,6 +215,72 @@ const Project: NextPage = () => {
             <div className="border" />
           )}
         </div>
+
+        <Modal show={showTeamModal} className="rounded-lg">
+          <div className="flex flex-col px-8 py-6">
+            <h1 className="text-xl font-semibold text-dark">Create a team</h1>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createTeam)}>
+              <input
+                {...register("teamName")}
+                type="text"
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                required
+                placeholder="Enter team name"
+                minLength={3}
+              />
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowTeamModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal show={showProjectModal} className="rounded-lg">
+          <div className="flex flex-col px-8 py-6">
+            <h1 className="text-xl font-bold text-dark">Create a project</h1>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createProject)}>
+              <input
+                {...register("projectName")}
+                type="text"
+                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                required
+                placeholder="Enter project name"
+                minLength={3}
+              />
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowProjectModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
       </Layout>
     </>
   );
