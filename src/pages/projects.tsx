@@ -93,6 +93,10 @@ const Project: NextPage = () => {
       <Layout session={session} route="Projects">
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
+            <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+              Teams
+            </div>
+            <p className="p-1"></p>
             <div
               onClick={() => setShowTeamModal(true)}
               className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
@@ -138,6 +142,10 @@ const Project: NextPage = () => {
           <div className="p-2">
             {selectedTeam ? (
               <div>
+                <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+                  Projects
+                </div>
+                <p className="p-1"></p>
                 <div
                   onClick={() => setShowProjectModal(true)}
                   className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
@@ -185,7 +193,11 @@ const Project: NextPage = () => {
             ) : null}
           </div>
           {selectedProject ? (
-            <div className="border p-2">
+            <div className="p-2">
+              <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+                Tasks
+              </div>
+              <p className="p-1"></p>
               <div>
                 {tasks.data?.length ? (
                   tasks.data.map((task) => (
@@ -211,9 +223,7 @@ const Project: NextPage = () => {
                 )}
               </div>
             </div>
-          ) : (
-            <div className="border" />
-          )}
+          ) : null}
         </div>
 
         <Modal show={showTeamModal} className="rounded-lg">

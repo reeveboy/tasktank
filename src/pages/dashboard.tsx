@@ -186,7 +186,7 @@ const Dashboard: NextPage = () => {
         <div className="flex flex-col items-center p-4">
           <div className="flex">
             <input
-              className="rounded-lg bg-dark px-8 py-2 text-sm text-neutral"
+              className="cursor-pointer rounded-lg bg-dark px-8 py-2 text-sm text-neutral"
               type="date"
               value={date.toISOString().substring(0, 10)}
               onChange={selectDate}
@@ -215,7 +215,7 @@ const Dashboard: NextPage = () => {
                   <p className="p-1"></p>
                   <button
                     onClick={handleStopActiveTask}
-                    className="bg- rounded-lg px-6 py-2 text-neutral"
+                    className="rounded-lg bg-red-500 px-6 py-2 text-neutral"
                   >
                     Stop
                   </button>

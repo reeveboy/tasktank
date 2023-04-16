@@ -104,6 +104,10 @@ const Teams: NextPage = () => {
       <Layout session={session} route="Teams">
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
+            <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+              Teams
+            </div>
+            <p className="p-1"></p>
             <div
               onClick={() => setShowTeamModal(true)}
               className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
@@ -148,7 +152,11 @@ const Teams: NextPage = () => {
           </div>
           <div className="p-2">
             {selectedTeam ? (
-              <>
+              <div>
+                <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+                  Members
+                </div>
+                <p className="p-1"></p>
                 <div
                   onClick={() => setShowInviteModal(true)}
                   className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
@@ -192,18 +200,20 @@ const Teams: NextPage = () => {
                       </>
                     ))
                   : null}
-              </>
+              </div>
             ) : null}
           </div>
           <div className="p-2">
             {selectedMember ? (
               <div className="flex h-full flex-col">
-                <div className="flex w-full items-center justify-between rounded-t-lg bg-sky-blue py-4 px-6">
+                <div className="flex w-full items-center justify-between rounded-t-lg bg-starynight/70 py-4 px-6">
                   <div className="flex">
-                    <div className="font-semibold">{selectedMember.name}</div>
+                    <div className="font-medium text-neutral">
+                      {selectedMember.name}
+                    </div>
                   </div>
                   <FontAwesomeIcon
-                    className="text-2xl text-dark"
+                    className="text-xl text-dark"
                     icon={faVideoCamera}
                   />
                 </div>

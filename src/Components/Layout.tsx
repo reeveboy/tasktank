@@ -27,53 +27,16 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="flex flex-col items-center border-r border-carbon bg-dark p-2">
+      <div className="flex w-full max-w-[150px] flex-col items-center border-r border-carbon bg-dark p-2">
         <div className="grid h-[50px] place-items-center p-2">
           <FontAwesomeIcon icon={faRocket} className="text-3xl text-sky-blue" />
         </div>
+        <p className="p-2"></p>
         <div className="flex w-full grow flex-col">
-          {/* <Link href={"/dashboard"}>
-            <FontAwesomeIcon
-              icon={faClock}
-              className={classNames(
-                "mb-4 text-xl transition-all hover:scale-110 hover:text-sky-300",
-                router.pathname == "/dashboard"
-                  ? "text-sky-400"
-                  : "text-sky-200"
-              )}
-            />
-          </Link>
-          <Link href={"/projects"}>
-            <FontAwesomeIcon
-              icon={faBook}
-              className={classNames(
-                "mb-4 text-xl transition-all hover:scale-110 hover:text-sky-300",
-                router.pathname == "/projects" ? "text-sky-400" : "text-sky-200"
-              )}
-            />
-          </Link>
-          <Link href={"/teams"}>
-            <FontAwesomeIcon
-              icon={faPeopleGroup}
-              className={classNames(
-                "mb-4 text-xl transition-all hover:scale-110 hover:text-sky-300",
-                router.pathname == "/teams" ? "text-sky-400" : "text-sky-200"
-              )}
-            />
-          </Link>
-          <Link href={"/reports"}>
-            <FontAwesomeIcon
-              icon={faChartPie}
-              className={classNames(
-                "mb-4 text-xl transition-all hover:scale-110 hover:text-sky-300",
-                router.pathname == "/reports" ? "text-sky-400" : "text-sky-200"
-              )}
-            />
-          </Link> */}
           <Link href={"/dashboard"}>
             <button
               className={classNames(
-                "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-white",
+                "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20",
                 router.pathname == "/dashboard"
                   ? "bg-starynight/80"
                   : "bg-white/10"
@@ -82,7 +45,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
               <span>Tracker</span>
               <p className="p-1"></p>
               <FontAwesomeIcon
-                className="text-lg text-neutral"
+                className="text-lg text-sky-blue"
                 icon={faClock}
               />
             </button>
@@ -91,7 +54,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
           <Link href={"/projects"}>
             <button
               className={classNames(
-                "flex w-full items-end justify-between  rounded px-3 py-2 text-xs font-medium text-white",
+                "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20",
                 router.pathname == "/projects"
                   ? "bg-starynight/80"
                   : "bg-white/10"
@@ -99,21 +62,24 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
             >
               <span>Projects</span>
               <p className="p-1"></p>
-              <FontAwesomeIcon className="text-lg text-neutral" icon={faBook} />
+              <FontAwesomeIcon
+                className="text-lg text-sky-blue"
+                icon={faBook}
+              />
             </button>
           </Link>
           <p className="p-2"></p>
           <Link href={"/teams"}>
             <button
               className={classNames(
-                "flex w-full items-end justify-between rounded px-3 py-2 text-xs font-medium text-white",
+                "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20",
                 router.pathname == "/teams" ? "bg-starynight/80" : "bg-white/10"
               )}
             >
               <span>Teams</span>
               <p className="p-1"></p>
               <FontAwesomeIcon
-                className="text-lg text-neutral"
+                className="text-lg text-sky-blue"
                 icon={faPeopleGroup}
               />
             </button>
@@ -122,7 +88,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
           <Link href={"/reports"}>
             <button
               className={classNames(
-                "flex w-full items-end justify-between rounded px-3 py-2 text-xs font-medium text-white",
+                "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20",
                 router.pathname == "/reports"
                   ? "bg-starynight/80"
                   : "bg-white/10"
@@ -131,27 +97,21 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
               <span>Reports</span>
               <p className="p-1"></p>
               <FontAwesomeIcon
-                className="text-lg text-neutral"
+                className="text-lg text-sky-blue"
                 icon={faChartPie}
               />
             </button>
           </Link>
         </div>
-        <div>
-          {/* <button onClick={() => signOut()}>
-            <FontAwesomeIcon
-              icon={faRightFromBracket}
-              className="text-xl  text-sky-200 transition-all hover:scale-110 hover:text-sky-300"
-            />
-          </button> */}
+        <div className="w-full">
           <button
             onClick={() => signOut()}
-            className="flex w-full items-end justify-between rounded bg-white/10 px-3 py-2 text-xs font-medium text-white"
+            className="flex w-full items-end justify-between rounded bg-white/10 px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20"
           >
             <span>Logout</span>
             <p className="p-1"></p>
             <FontAwesomeIcon
-              className="text-lg text-neutral"
+              className="text-lg text-sky-blue"
               icon={faRightFromBracket}
             />
           </button>
@@ -159,60 +119,12 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
       </div>
       <div className="flex w-full flex-col">
         <div className="flex h-[55px] w-full items-center bg-starynight/80 p-2 ">
-          <div className="text-lg font-bold text-neutral">{route}</div>
-          {/* <div className="flex h-full grow items-center justify-center">
-            <Link href={"/dashboard"}>
-              <button
-                className={classNames(
-                  "rounded px-3 py-2 text-xs font-medium text-white",
-                  router.pathname == "/dashboard"
-                    ? "bg-starynight/80"
-                    : "bg-white/10"
-                )}
-              >
-                Tracker
-              </button>
-            </Link>
-            <p className="p-2"></p>
-            <Link href={"/projects"}>
-              <button
-                className={classNames(
-                  "rounded px-3 py-2 text-xs font-medium text-white",
-                  router.pathname == "/projects"
-                    ? "bg-starynight/80"
-                    : "bg-white/10"
-                )}
-              >
-                Projects
-              </button>
-            </Link>
-            <p className="p-2"></p>
-            <Link href={"/teams"}>
-              <button
-                className={classNames(
-                  "rounded px-3 py-2 text-xs font-medium text-white",
-                  router.pathname == "/teams"
-                    ? "bg-starynight/80"
-                    : "bg-white/10"
-                )}
-              >
-                Teams
-              </button>
-            </Link>
-            <p className="p-2"></p>
-            <Link href={"/reports"}>
-              <button
-                className={classNames(
-                  "rounded px-3 py-2 text-xs font-medium text-white",
-                  router.pathname == "/reports"
-                    ? "bg-starynight/80"
-                    : "bg-white/10"
-                )}
-              >
-                Reports
-              </button>
-            </Link>
-          </div> */}
+          <div className="text-lg text-neutral">
+            <span>Welcome, </span>
+            <span className="font-medium ">
+              {session.user.name?.split(" ")[0]}
+            </span>
+          </div>
           <img
             className="ml-auto h-10 w-10 cursor-pointer rounded-full border-2 border-dark transition-all hover:scale-[1.01]"
             src={user.image ? user.image : ""}

@@ -26,7 +26,8 @@ const sendInviteMail = async (emailParams: IEmailParams) => {
       <div class="img-container" style="display: flex;justify-content: center;align-items: center;border-radius: 5px;overflow: hidden; font-family: 'helvetica', 'ui-sans';">
         <a href="${url}">View Invitation</a>
       </div>
-
+    </body>
+    </html>
     `,
   };
 
