@@ -112,6 +112,9 @@ export const taskRouter = createTRPCRouter({
         include: {
           user: true,
         },
+        orderBy: {
+          date: "asc",
+        },
       });
       return tasks;
     }),

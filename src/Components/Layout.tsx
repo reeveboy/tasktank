@@ -13,6 +13,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import classNames from "classnames";
+import Dropdown from "./Dropdown";
 
 interface props {
   children?: React.ReactNode;
@@ -27,7 +28,7 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
 
   return (
     <div className="flex h-screen w-full">
-      <div className="flex w-full max-w-[150px] flex-col items-center border-r border-carbon bg-dark p-2">
+      <div className="flex w-full max-w-[150px] flex-col items-center bg-dark p-2">
         <div className="grid h-[50px] place-items-center p-2">
           <FontAwesomeIcon icon={faRocket} className="text-3xl text-sky-blue" />
         </div>
@@ -125,10 +126,12 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
               {session.user.name?.split(" ")[0]}
             </span>
           </div>
-          <img
-            className="ml-auto h-10 w-10 cursor-pointer rounded-full border-2 border-dark transition-all hover:scale-[1.01]"
-            src={user.image ? user.image : ""}
-          />
+          <Dropdown user={session.user}>
+            <img
+              className="ml-auto h-8 cursor-pointer rounded-full border-2 border-dark transition-all hover:scale-[1.01]"
+              src={user.image ? user.image : ""}
+            />
+          </Dropdown>
         </div>
         <div className="grow overflow-y-auto bg-neutral">{children}</div>
       </div>

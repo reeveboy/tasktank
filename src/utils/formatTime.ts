@@ -9,3 +9,26 @@ export function formatTime(seconds: number): string {
 
   return `${hourString}:${minuteString}:${secondString}`;
 }
+
+export function formatTime2(seconds: number | null | undefined): string[] {
+  if (!seconds) {
+    return ["0", "0", "0"];
+  }
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  const hoursString = hours.toString();
+  const minutesString = minutes.toString();
+  const secondsString = remainingSeconds.toString();
+
+  return [hoursString, minutesString, secondsString];
+}
+
+export function parseTime(timeString: string): number {
+  const [hours, minutes, seconds] = timeString.split(":").map(Number);
+
+  const totalSeconds =
+    (hours ?? 0) * 3600 + (minutes ?? 0) * 60 + (seconds ?? 0);
+  return totalSeconds;
+}

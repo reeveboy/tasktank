@@ -20,7 +20,7 @@ import { getToday } from "~/utils/getToday";
 import classNames from "classnames";
 import { Modal } from "flowbite-react";
 import { useStopwatch } from "react-timer-hook";
-import { formatTime } from "~/utils/formatTime";
+import { formatTime, formatTime2, parseTime } from "~/utils/formatTime";
 
 type TaskWithProjects = Prisma.TaskGetPayload<{
   include: {
@@ -78,6 +78,8 @@ const Dashboard: NextPage = () => {
     reset: resetWatch,
   } = useStopwatch({ autoStart: false });
 
+  const formatedTime = formatTime2(selectedTask?.timeElapsed);
+
   // Button Handlers
   const selectDate = (e: any) => {
     setDate(new Date(e.target.value));
@@ -101,6 +103,8 @@ const Dashboard: NextPage = () => {
   };
 
   const handleStartActiveTask = (task: Task) => {
+    if (activeTask) handleStopActiveTask();
+
     if (task.competed) return;
 
     setActiveTask(task);
@@ -154,14 +158,20 @@ const Dashboard: NextPage = () => {
   const updateTask = (d: any) => {
     if (!selectedTask) return;
 
+    const formatedTime = formatTime2(selectedTask.timeElapsed);
+    if (d.newTimeElapsedHours) formatedTime[0] = d.newTimeElapsedHours;
+    if (d.newTimeElapsedMinutes) formatedTime[1] = d.newTimeElapsedMinutes;
+    if (d.newTimeElapsedSeconds) formatedTime[2] = d.newTimeElapsedSeconds;
+
+    const finalTime = parseTime(
+      `${formatedTime[0]}:${formatedTime[1]}:${formatedTime[2]}`
+    );
     updateTaskMutation.mutate(
       {
         id: selectedTask.id,
         name: d.newTaskName ? d.newTaskName : selectedTask.name,
         projectId: d.newProject ? d.newProject : selectedTask.projectId,
-        timeElapsed: d.newTimeElapsed
-          ? parseInt(d.newTimeElapsed)
-          : selectedTask.timeElapsed,
+        timeElapsed: finalTime,
         complete: selectedTask.competed,
       },
       {
@@ -251,7 +261,7 @@ const Dashboard: NextPage = () => {
                   tasks.data?.map((task) => (
                     <tr
                       className={classNames(
-                        "border bg-white/50 text-dark",
+                        "border bg-white/50 capitalize text-dark",
                         task.competed ? "line-through" : ""
                       )}
                     >
@@ -309,47 +319,76 @@ const Dashboard: NextPage = () => {
           </div>
           <div className="grid w-full place-items-center"></div>
         </div>
+
         <Modal show={showEditModal}>
           <div className="flex flex-col px-8 py-6">
             <p className="text-xl font-semibold text-dark">Edit Task</p>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(updateTask)}>
               <div className="w-full">
-                <input
-                  {...register("newTaskName")}
-                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                  type="text"
-                  minLength={3}
-                  placeholder={selectedTask?.name}
-                />
+                <div>
+                  <span className="text-xs">Task Name</span>
+                  <input
+                    {...register("newTaskName")}
+                    className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                    type="text"
+                    minLength={3}
+                    placeholder={selectedTask?.name}
+                  />
+                </div>
                 <p className="p-2"></p>
-                <input
-                  {...register("newTimeElapsed")}
-                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                  type="number"
-                  minLength={3}
-                  placeholder={selectedTask?.timeElapsed.toLocaleString()}
-                />
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <span className="text-xs">Hours</span>
+                    <input
+                      {...register("newTimeElapsedHours")}
+                      className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                      type="number"
+                      placeholder={formatedTime[0]}
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs">Minutes</span>
+                    <input
+                      {...register("newTimeElapsedMinutes")}
+                      className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                      type="number"
+                      placeholder={formatedTime[1]}
+                    />
+                  </div>
+                  <div>
+                    <span className="text-xs">Seconds</span>
+                    <input
+                      {...register("newTimeElapsedSeconds")}
+                      className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                      type="number"
+                      placeholder={formatedTime[2]}
+                    />
+                  </div>
+                </div>
                 <p className="p-2"></p>
-                <select
-                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                  {...register("newProject")}
-                  // onChange={handleChange}
-                >
-                  {projects.data?.map((project) => (
-                    <option
-                      selected={project.id == selectedTask?.projectId}
-                      value={project.id}
-                    >
-                      <div className="flex w-full justify-between">
-                        <span>
-                          Project {project.name} {"->"}{" "}
-                        </span>
-                        <span>Team {project.team.name}</span>
-                      </div>
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <span className="text-xs">Project {"->"} Team</span>
+
+                  <select
+                    className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm capitalize shadow"
+                    {...register("newProject")}
+                  >
+                    {projects.data?.map((project) => (
+                      <option
+                        selected={project.id == selectedTask?.projectId}
+                        value={project.id}
+                      >
+                        <div className="flex w-full justify-between">
+                          <span>
+                            {project.name} {"->"}{" "}
+                          </span>
+                          <span>{project.team.name}</span>
+                        </div>
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <p className="p-2"></p>
                 <div className="grid w-full place-items-center">
                   <div className="flex items-center">
@@ -394,30 +433,37 @@ const Dashboard: NextPage = () => {
             <p className="text-xl font-semibold text-dark">Add Task</p>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(createTask)}>
-              <input
-                {...register("taskName")}
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                type="text"
-                minLength={3}
-                placeholder="Enter Task Name"
-              />
+              <div>
+                <span className="text-xs">Task Name</span>
+                <input
+                  {...register("taskName")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  type="text"
+                  minLength={3}
+                  placeholder="Enter Task Name"
+                />
+              </div>
               <p className="p-2"></p>
-              <select
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                {...register("project")}
-              >
-                <option value="">Select Project</option>
-                {projects.data?.map((project) => (
-                  <option value={project.id}>
-                    <div className="flex w-full justify-between">
-                      <span>
-                        Project {project.name} {"->"}{" "}
-                      </span>
-                      <span>Team {project.team.name}</span>
-                    </div>
-                  </option>
-                ))}
-              </select>
+              <div>
+                <span className="text-xs">Project {"->"} Team</span>
+
+                <select
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  {...register("project")}
+                >
+                  <option value="">Select Project</option>
+                  {projects.data?.map((project) => (
+                    <option value={project.id}>
+                      <div className="flex w-full justify-between">
+                        <span>
+                          Project {project.name} {"->"}{" "}
+                        </span>
+                        <span>Team {project.team.name}</span>
+                      </div>
+                    </option>
+                  ))}
+                </select>
+              </div>
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button

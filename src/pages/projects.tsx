@@ -17,7 +17,15 @@ import React, { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
 import classNames from "classnames";
-import { Team, Project as ProjectType } from "@prisma/client";
+import { Team, Project as ProjectType, Prisma } from "@prisma/client";
+import { formatTime } from "~/utils/formatTime";
+import { getToday, getTodayString } from "~/utils/getToday";
+
+type TaskWithUsers = Prisma.TaskGetPayload<{
+  include: {
+    user: true;
+  };
+}>;
 
 const Project: NextPage = () => {
   const router = useRouter();
@@ -31,30 +39,51 @@ const Project: NextPage = () => {
 
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
 
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, reset } = useForm();
 
-  const teams = api.team.getAll.useQuery();
-  const teamMutation = api.team.create.useMutation();
   const [selectedTeam, setSelectedTeam] = useState<Team>();
-
-  const projects = api.project.getTeamProjects.useQuery({
-    teamId: selectedTeam?.id,
-  });
-  const projectMutation = api.project.create.useMutation();
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(
     null
   );
+  const [selectedTask, setSelectedTask] = useState<TaskWithUsers | null>(null);
 
+  const teams = api.team.getAll.useQuery();
+  const projects = api.project.getTeamProjects.useQuery({
+    teamId: selectedTeam?.id,
+  });
   const tasks = api.task.getProjectTasks.useQuery({
     projectId: selectedProject?.id,
   });
+  const userProjects = api.project.getUserProjects.useQuery();
+
+  const teamMutation = api.team.create.useMutation();
+  const projectMutation = api.project.create.useMutation();
+  const taskMutation = api.task.create.useMutation();
 
   const utils = api.useContext();
 
   const selectTeam = (team: Team) => {
     setSelectedTeam(team);
     setSelectedProject(null);
+    setSelectedTask(null);
+  };
+
+  const selectProject = (project: ProjectType) => {
+    setSelectedProject(project);
+    setSelectedTask(null);
+  };
+
+  const selectTask = (task: TaskWithUsers) => {
+    setSelectedTask(task);
+    setShowTaskModal(true);
+  };
+
+  const closeTaskModal = () => {
+    setShowTaskModal(false);
+    setSelectedTask(null);
   };
 
   const createTeam = (d: any) => {
@@ -63,6 +92,8 @@ const Project: NextPage = () => {
       {
         onSuccess: () => {
           utils.team.getAll.invalidate();
+
+          reset();
         },
       }
     );
@@ -77,10 +108,33 @@ const Project: NextPage = () => {
           utils.project.getTeamProjects.invalidate({
             teamId: selectedTeam?.id,
           });
+
+          reset();
         },
       }
     );
     setShowProjectModal(false);
+  };
+
+  const createTask = (d: any) => {
+    if (!d.project || !d.taskName || !d.date) return;
+
+    taskMutation.mutate(
+      {
+        name: d.taskName,
+        projectId: d.project,
+        date: new Date(d.date),
+      },
+      {
+        onSuccess: () => {
+          utils.task.getProjectTasks.invalidate();
+
+          setShowAddTaskModal(false);
+
+          reset();
+        },
+      }
+    );
   };
 
   if (!session) return null;
@@ -93,7 +147,7 @@ const Project: NextPage = () => {
       <Layout session={session} route="Projects">
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
-            <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+            <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
               Teams
             </div>
             <p className="p-1"></p>
@@ -122,7 +176,9 @@ const Project: NextPage = () => {
                         : "bg-white/50"
                     )}
                   >
-                    <span className="text-md grow text-dark">{team.name}</span>
+                    <span className="text-md grow capitalize text-dark">
+                      {team.name}
+                    </span>
                     <FontAwesomeIcon
                       icon={faCircleChevronRight}
                       className="text-2xl text-dark"
@@ -142,7 +198,7 @@ const Project: NextPage = () => {
           <div className="p-2">
             {selectedTeam ? (
               <div>
-                <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+                <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
                   Projects
                 </div>
                 <p className="p-1"></p>
@@ -163,7 +219,7 @@ const Project: NextPage = () => {
                   projects.data.map((project) => (
                     <>
                       <div
-                        onClick={() => setSelectedProject(project)}
+                        onClick={() => selectProject(project)}
                         className={classNames(
                           "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                           selectedProject?.id === project.id
@@ -171,7 +227,7 @@ const Project: NextPage = () => {
                             : "bg-white/50"
                         )}
                       >
-                        <span className="text-md grow text-dark">
+                        <span className="text-md grow capitalize text-dark">
                           {project.name}
                         </span>
                         <FontAwesomeIcon
@@ -194,21 +250,40 @@ const Project: NextPage = () => {
           </div>
           {selectedProject ? (
             <div className="p-2">
-              <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+              <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
                 Tasks
               </div>
               <p className="p-1"></p>
+              <div
+                onClick={() => setShowAddTaskModal(true)}
+                className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+              >
+                <span className="text-md grow font-medium text-dark">
+                  Create a task
+                </span>
+                <FontAwesomeIcon
+                  icon={faPlusCircle}
+                  className="text-2xl text-dark"
+                />
+              </div>
+              <p className="p-2"></p>
               <div>
                 {tasks.data?.length ? (
                   tasks.data.map((task) => (
                     <>
                       <div
+                        onClick={() => selectTask(task)}
                         className={classNames(
-                          "flex w-full cursor-pointer rounded-md bg-white/50 px-3 py-2 text-sm text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
-                          task.competed ? "line-through" : ""
+                          "text-md flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                          task.competed ? "line-through" : "",
+                          selectedTask?.id === task.id
+                            ? "bg-sky-blue"
+                            : "bg-white/50"
                         )}
                       >
-                        <span className="text-md grow">{task.name}</span>
+                        <span className="text-md grow capitalize">
+                          {task.name}
+                        </span>
                         <span>{task.user.name}</span>
                       </div>
                       <p className="p-1"></p>
@@ -231,14 +306,17 @@ const Project: NextPage = () => {
             <h1 className="text-xl font-semibold text-dark">Create a team</h1>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(createTeam)}>
-              <input
-                {...register("teamName")}
-                type="text"
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                required
-                placeholder="Enter team name"
-                minLength={3}
-              />
+              <div>
+                <span className="text-xs">Team Name</span>
+                <input
+                  {...register("teamName")}
+                  type="text"
+                  className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
+                  required
+                  placeholder="Enter team name"
+                  minLength={3}
+                />
+              </div>
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button
@@ -264,14 +342,17 @@ const Project: NextPage = () => {
             <h1 className="text-xl font-bold text-dark">Create a project</h1>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(createProject)}>
-              <input
-                {...register("projectName")}
-                type="text"
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                required
-                placeholder="Enter project name"
-                minLength={3}
-              />
+              <div>
+                <span className="text-xs">Project Name</span>
+                <input
+                  {...register("projectName")}
+                  type="text"
+                  className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
+                  required
+                  placeholder="Enter project name"
+                  minLength={3}
+                />
+              </div>
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button
@@ -284,6 +365,134 @@ const Project: NextPage = () => {
                   type="button"
                   className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
                   onClick={() => setShowProjectModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal show={showTaskModal} className="rounded-lg">
+          <div className="flex flex-col px-8 py-6">
+            <h1 className="text-xl font-bold text-dark">Task Info</h1>
+            <p className="p-2"></p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-xs">Task Name</span>
+                <p className="rounded-md border px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedTask?.name}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs">Date</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedTask?.date.toDateString()}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs">Project Name</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedProject?.name}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs">Team Name</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedTeam?.name}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs">Member Name</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedTask?.user.name}
+                </p>
+              </div>
+              <div>
+                <span className="text-xs">Time Elapsed</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {formatTime(selectedTask?.timeElapsed ?? 0)}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <span className="text-xs">Completed</span>
+                <p className="rounded-md px-3 py-2 text-sm capitalize text-gray-700 shadow-md">
+                  {selectedTask?.competed ? "true" : "false"}
+                </p>
+              </div>
+            </div>
+            <p className="p-2"></p>
+            <button
+              type="button"
+              className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+              onClick={closeTaskModal}
+            >
+              Close
+            </button>
+          </div>
+        </Modal>
+
+        <Modal show={showAddTaskModal}>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Add Task</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createTask)}>
+              <div>
+                <span className="text-xs">Task Name</span>
+                <input
+                  {...register("taskName")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
+                  type="text"
+                  minLength={3}
+                  placeholder="Enter Task Name"
+                  required
+                />
+              </div>
+              <p className="p-2"></p>
+              <div>
+                <span className="text-xs">Date</span>
+
+                <input
+                  {...register("date")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 text-sm"
+                  type="date"
+                  min={getTodayString(new Date())}
+                  required
+                />
+              </div>
+              <p className="p-2"></p>
+              <div>
+                <span className="text-xs">Project {"->"} Team</span>
+
+                <select
+                  className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
+                  {...register("project")}
+                >
+                  <option value="">Select Project</option>
+                  {userProjects.data?.map((project) => (
+                    <option value={project.id}>
+                      <div className="flex w-full justify-between">
+                        <span>
+                          Project {project.name} {"->"}{" "}
+                        </span>
+                        <span>Team {project.team.name}</span>
+                      </div>
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight  py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500  py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowAddTaskModal(false)}
                 >
                   Close
                 </button>

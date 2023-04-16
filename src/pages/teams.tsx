@@ -104,7 +104,7 @@ const Teams: NextPage = () => {
       <Layout session={session} route="Teams">
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
-            <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+            <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
               Teams
             </div>
             <p className="p-1"></p>
@@ -153,7 +153,7 @@ const Teams: NextPage = () => {
           <div className="p-2">
             {selectedTeam ? (
               <div>
-                <div className="rounded bg-starynight/70 p-1 text-center text-sm text-neutral shadow-sm">
+                <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
                   Members
                 </div>
                 <p className="p-1"></p>
@@ -274,14 +274,17 @@ const Teams: NextPage = () => {
             <h1 className="text-xl font-semibold text-dark">Create a team</h1>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(createTeam)}>
-              <input
-                {...register("teamName")}
-                type="text"
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                required
-                placeholder="Enter team name"
-                minLength={3}
-              />
+              <div>
+                <span className="text-xs">Team Name</span>
+                <input
+                  {...register("teamName")}
+                  type="text"
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  required
+                  placeholder="Enter team name"
+                  minLength={3}
+                />
+              </div>
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button
@@ -307,14 +310,17 @@ const Teams: NextPage = () => {
             <p className="text-lg font-semibold text-dark">Invite members</p>
             <p className="p-2"></p>
             <form onSubmit={handleSubmit(submitInvite)}>
-              <input
-                {...register("emailTo")}
-                className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
-                type="email"
-                required
-                minLength={3}
-                placeholder="Enter email address"
-              />
+              <div>
+                <span className="text-xs">Email Address</span>
+                <input
+                  {...register("emailTo")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  type="email"
+                  required
+                  minLength={3}
+                  placeholder="Enter email address"
+                />
+              </div>
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button
