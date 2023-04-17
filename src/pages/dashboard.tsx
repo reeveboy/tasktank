@@ -6,9 +6,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Prisma, Project, Task } from "@prisma/client";
 import { NextPage } from "next";
-import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { useState } from "react";
 
 import Layout from "~/Components/Layout";
@@ -33,14 +31,6 @@ type TaskWithProjects = Prisma.TaskGetPayload<{
 }>;
 
 const Dashboard: NextPage = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      router.push("/");
-    },
-  });
-
   const { register, handleSubmit, reset } = useForm();
 
   let d = new Date();
@@ -185,14 +175,12 @@ const Dashboard: NextPage = () => {
     );
   };
 
-  if (!session) return null;
-
   return (
     <>
       <Head>
         <title>Tracker</title>
       </Head>
-      <Layout session={session} route="Tracker">
+      <Layout>
         <div className="flex flex-col items-center p-4">
           <div className="flex">
             <input

@@ -3,15 +3,43 @@ import Head from "next/head";
 import { signIn, useSession } from "next-auth/react";
 
 import { useRouter } from "next/router";
+import { useForm } from "react-hook-form";
+import Link from "next/link";
 
 const Home: NextPage = () => {
   const router = useRouter();
 
   const { data: session, status } = useSession();
-
   if (session) {
     router.push("/dashboard");
   }
+
+  const { register, handleSubmit, reset } = useForm();
+
+  const signup = async (d: any) => {
+    if (!d.name || !d.email || !d.password || d.password < 5) return;
+
+    if (d.password !== d.repassword) return;
+
+    console.log(d);
+
+    const response = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: d.name,
+        email: d.email,
+        password: d.password,
+      }),
+    });
+
+    if (response.ok) {
+      router.push("/signin");
+    } else {
+      const data = await response.json();
+      console.log(data);
+    }
+  };
 
   if (status == "loading") {
     return <div>Loading</div>;
@@ -20,25 +48,40 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Tasktank Login</title>
+        <title>Tasktank Signup</title>
       </Head>
-      <div className="flex h-screen w-full items-center justify-center bg-[#EDFBFF]">
+      <div className="flex h-screen w-full items-center justify-center bg-dark/90">
         <div className="rounded-lg bg-white px-10 py-6 drop-shadow-md">
-          <form className="flex flex-col items-center">
-            <h1 className="w-fit text-xl font-bold">SignIn to Tasktank</h1>
+          <form
+            onSubmit={handleSubmit(signup)}
+            className="flex flex-col items-center text-dark"
+          >
+            <h1 className="w-fit text-xl font-bold">Signup to Tasktank</h1>
 
             <p className="p-2"></p>
 
             <p className="text-center text-sm">
               Hey, Enter your details to get sign
               <br />
-              in to your account
+              up to Tasktank
             </p>
 
             <p className="p-2"></p>
 
             <div className="relative grid w-full">
               <input
+                {...register("name")}
+                type="text"
+                placeholder="Enter Name"
+                className="w-full rounded border px-3 py-2 text-sm"
+              ></input>
+            </div>
+
+            <p className="p-1"></p>
+
+            <div className="relative grid w-full">
+              <input
+                {...register("email")}
                 type="email"
                 placeholder="Enter Email"
                 className="w-full rounded border px-3 py-2 text-sm"
@@ -49,45 +92,58 @@ const Home: NextPage = () => {
 
             <div className="relative grid w-full p-0 ">
               <input
+                {...register("password")}
                 type="password"
-                placeholder="Password"
+                placeholder="Enter Password"
                 className="w-full rounded border px-3 py-2 pr-9 text-sm"
+                min={5}
               ></input>
             </div>
 
             <p className="p-1"></p>
 
-            <button className="w-full rounded-md bg-[#FDC886]/80 px-2 py-2 text-sm font-light hover:bg-[#FDC886]">
-              Login
+            <div className="relative grid w-full p-0 ">
+              <input
+                {...register("repassword")}
+                type="password"
+                placeholder="Renter Password"
+                className="w-full rounded border px-3 py-2 pr-9 text-sm"
+                min={5}
+              ></input>
+            </div>
+
+            <p className="p-1"></p>
+
+            <button
+              type="submit"
+              className="w-full rounded-md bg-starynight/80 px-2 py-2 text-sm font-medium text-neutral hover:bg-starynight"
+            >
+              Register
             </button>
 
             <p className="p-2"></p>
 
-            <p className="text-center text-sm font-light">Or SignIn with</p>
+            <p className="text-center text-sm font-light">
+              Already have an account?{" "}
+              <span>
+                <Link href={"/signin"}>
+                  {" "}
+                  <span className="text-starynight">Sign In</span>{" "}
+                </Link>
+              </span>
+            </p>
+            <p className="p-1"></p>
+            <p className="text-center text-sm font-light">Or Sign Up with</p>
 
             <p className="p-2"></p>
 
             <div className="grid w-full grid-cols-2 gap-2">
               <button
-                onClick={() => signIn()}
-                className="flex items-center justify-center rounded-md border px-3 py-2 transition-all hover:scale-105"
+                onClick={() => signIn("github")}
+                className="col-span-2 flex items-center justify-center rounded-md border px-3 py-2 transition-all hover:scale-105"
               >
                 <svg
-                  className="w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 488 512"
-                >
-                  <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-                </svg>
-                <p className="p-1"></p>
-                <span className="font-light">Google</span>
-              </button>
-              <button
-                onClick={() => signIn()}
-                className="flex items-center justify-center rounded-md border px-3 py-2 transition-all hover:scale-105"
-              >
-                <svg
-                  className="w-4"
+                  className="w-6 text-dark"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 496 512"
                 >

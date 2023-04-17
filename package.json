@@ -23,6 +23,7 @@
     "@trpc/next": "^10.9.0",
     "@trpc/react-query": "^10.9.0",
     "@trpc/server": "^10.9.0",
+    "argon2": "^0.30.3",
     "chart.js": "^4.2.1",
     "classnames": "^2.3.2",
     "flowbite": "^1.6.4",
@@ -33,7 +34,6 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.43.7",
-    "react-stopwatch": "^2.0.4",
     "react-timer-hook": "^3.0.5",
     "superjson": "1.9.1",
     "zod": "^3.20.6"

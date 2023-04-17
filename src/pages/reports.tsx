@@ -35,15 +35,6 @@ export const options = {
 };
 
 const Reports: NextPage = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      console.log("unauthenticated");
-      router.push("/");
-    },
-  });
-
   const chardata = api.task.getChartData.useQuery();
 
   const labels = chardata.data?.map((d) => d.date.toLocaleDateString());
@@ -58,14 +49,12 @@ const Reports: NextPage = () => {
     ],
   };
 
-  if (!session) return null;
-
   return (
     <>
       <Head>
         <title>Reports</title>
       </Head>
-      <Layout session={session} route="Reports">
+      <Layout>
         <div className="flex flex-col p-4 text-lg font-semibold">
           <p className="text-center">Total time completed this week</p>
           <div className="grid scale-[0.8] place-items-center rounded-lg bg-white/50 px-2 py-4 shadow-lg">

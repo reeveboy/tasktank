@@ -10,21 +10,30 @@ import {
 import React from "react";
 import { Session } from "next-auth";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import classNames from "classnames";
 import Dropdown from "./Dropdown";
 
 interface props {
   children?: React.ReactNode;
-  session: Session;
-  route: string;
 }
 
-const Layout: React.FC<props> = ({ children, session, route }) => {
-  const { user } = session;
-
+const Layout: React.FC<props> = ({ children }) => {
   const router = useRouter();
+  const { data, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      router.push("/signin");
+    },
+  });
+  console.log(data);
+
+  const user = data?.user;
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen w-full">
@@ -122,14 +131,12 @@ const Layout: React.FC<props> = ({ children, session, route }) => {
         <div className="flex h-[55px] w-full items-center bg-starynight/80 p-2 ">
           <div className="text-lg text-neutral">
             <span>Welcome, </span>
-            <span className="font-medium ">
-              {session.user.name?.split(" ")[0]}
-            </span>
+            <span className="font-medium ">{user?.name?.split(" ")[0]}</span>
           </div>
-          <Dropdown user={session.user}>
+          <Dropdown user={user}>
             <img
               className="ml-auto h-8 cursor-pointer rounded-full border-2 border-dark transition-all hover:scale-[1.01]"
-              src={user.image ? user.image : ""}
+              src={user?.image ? user.image : ""}
             />
           </Dropdown>
         </div>

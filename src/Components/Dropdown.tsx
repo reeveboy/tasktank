@@ -7,7 +7,7 @@ import { signOut } from "next-auth/react";
 
 interface props {
   children?: React.ReactNode;
-  user: User;
+  user?: User;
 }
 
 const Dropdown: React.FC<props> = ({ children, user }) => {
@@ -33,7 +33,7 @@ const Dropdown: React.FC<props> = ({ children, user }) => {
                   "block px-4 py-2 text-sm"
                 )}
               >
-                Hi, {user.name}
+                Hi, {user?.name}
               </span>
             </Menu.Item>
             <Menu.Item>

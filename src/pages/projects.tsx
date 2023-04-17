@@ -28,15 +28,6 @@ type TaskWithUsers = Prisma.TaskGetPayload<{
 }>;
 
 const Project: NextPage = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      console.log("unauthenticated");
-      router.push("/");
-    },
-  });
-
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -137,14 +128,12 @@ const Project: NextPage = () => {
     );
   };
 
-  if (!session) return null;
-
   return (
     <>
       <Head>
         <title>Projects</title>
       </Head>
-      <Layout session={session} route="Projects">
+      <Layout>
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
             <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">

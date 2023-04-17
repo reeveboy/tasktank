@@ -18,14 +18,7 @@ import Layout from "~/Components/Layout";
 import { api } from "~/utils/api";
 
 const Teams: NextPage = () => {
-  const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      console.log("unauthenticated");
-      router.push("/");
-    },
-  });
+  const { data: session } = useSession();
 
   const { handleSubmit, register, reset } = useForm();
 
@@ -94,14 +87,12 @@ const Teams: NextPage = () => {
     messageref.current?.reset();
   };
 
-  if (!session) return null;
-
   return (
     <>
       <Head>
         <title>Teams</title>
       </Head>
-      <Layout session={session} route="Teams">
+      <Layout>
         <div className="grid h-full grid-cols-3 p-4">
           <div className="p-2">
             <div className="rounded bg-dark p-1 text-center text-sm text-neutral shadow-sm">
@@ -189,7 +180,7 @@ const Teams: NextPage = () => {
                           <p className="p-2"></p>
                           <span className="grow text-sm text-dark">
                             {member.name}{" "}
-                            {member.id === session.user.id ? "(You)" : ""}
+                            {member.id === session?.user.id ? "(You)" : ""}
                           </span>
                           <FontAwesomeIcon
                             icon={faCircleChevronRight}
@@ -224,7 +215,7 @@ const Teams: NextPage = () => {
                       getChats.data.map((chat) => (
                         <div
                           className={classNames(
-                            chat.senderId === session.user.id
+                            chat.senderId === session?.user.id
                               ? "ml-16 justify-self-end"
                               : "mr-16 justify-self-start"
                           )}
