@@ -278,7 +278,7 @@ const Room = () => {
         </button>
         <p className="p-3"></p>
         <button
-          className="text-xl text-white/70 hover:text-white"
+          className="text-xl text-red-400 hover:text-red-500"
           onClick={leaveRoom}
           type="button"
         >
