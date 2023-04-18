@@ -3,6 +3,7 @@ import {
   faPenToSquare,
   faPlusCircle,
   faTrash,
+  faVideo,
   faVideoCamera,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,6 +13,7 @@ import { Modal } from "flowbite-react";
 import { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +34,7 @@ const Teams: NextPage = () => {
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
+  const [isGroupChat, setIsGroupChat] = useState(false);
 
   const userTeams = api.team.getAll.useQuery();
   const teamMembers = api.team.getTeamMembers.useQuery({
@@ -40,6 +43,9 @@ const Teams: NextPage = () => {
 
   const getChats = api.message.getChats.useQuery({
     recieverId: selectedMember?.id,
+  });
+  const getGroupChat = api.message.getGroupChat.useQuery({
+    teamId: selectedTeam?.id,
   });
 
   const teamMutation = api.team.create.useMutation();
@@ -62,6 +68,16 @@ const Teams: NextPage = () => {
     setShowEditTeamModal(true);
   };
 
+  const selectGroupChat = () => {
+    setIsGroupChat(true);
+    setSelectedMember(null);
+  };
+
+  const sendMessage = (member: User) => {
+    setSelectedMember(member);
+    setIsGroupChat(false);
+  };
+
   const createTeam = (d: any) => {
     teamMutation.mutate(
       { name: d.teamName },
@@ -75,7 +91,6 @@ const Teams: NextPage = () => {
   };
 
   const updateTeam = (d: any) => {
-    console.log(d);
     if (!d.newTeamName || !selectedTeam) return;
 
     teamUpdate.mutate(
@@ -126,7 +141,6 @@ const Teams: NextPage = () => {
   };
 
   const submitInvite = (d: any) => {
-    console.log(d);
     sendInviteMutation.mutate({
       email: d.emailTo,
       teamId: selectedTeam?.id,
@@ -135,7 +149,7 @@ const Teams: NextPage = () => {
     reset();
   };
 
-  const sendMessage = (d: any) => {
+  const sendDM = (d: any) => {
     sendDMMutation.mutate(
       {
         recieverId: selectedMember?.id,
@@ -144,6 +158,22 @@ const Teams: NextPage = () => {
       {
         onSettled: () => {
           utils.message.getChats.invalidate();
+        },
+      }
+    );
+    reset();
+    messageref.current?.reset();
+  };
+
+  const sendGroupChat = (d: any) => {
+    sendDMMutation.mutate(
+      {
+        teamId: selectedTeam?.id,
+        message: d.message,
+      },
+      {
+        onSettled: () => {
+          utils.message.getGroupChat.invalidate();
         },
       }
     );
@@ -172,7 +202,7 @@ const Teams: NextPage = () => {
               </span>
               <FontAwesomeIcon
                 icon={faPlusCircle}
-                className="text-2xl text-dark"
+                className="text-xl text-dark"
               />
             </div>
             <p className="p-2"></p>
@@ -233,15 +263,33 @@ const Teams: NextPage = () => {
                   </span>
                   <FontAwesomeIcon
                     icon={faPlusCircle}
-                    className="text-2xl text-dark"
+                    className="text-xl text-dark"
                   />
                 </div>
                 <p className="p-2"></p>
+                <div
+                  onClick={selectGroupChat}
+                  className={classNames(
+                    "flex w-full cursor-pointer items-center rounded-md bg-white/50 px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]"
+                  )}
+                >
+                  <img
+                    className="h-8 w-8 rounded-full"
+                    src="/rocket-solid.svg"
+                  />
+                  <p className="p-2"></p>
+                  <span className="grow text-sm text-dark">Group Chat</span>
+                  <FontAwesomeIcon
+                    icon={faCircleChevronRight}
+                    className="text-xl text-dark"
+                  />
+                </div>
+                <p className="p-1"></p>
                 {teamMembers.data?.members.length
                   ? teamMembers.data.members.map((member) => (
                       <>
                         <div
-                          onClick={() => setSelectedMember(member.user)}
+                          onClick={() => sendMessage(member.user)}
                           className={classNames(
                             "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                             selectedMember?.id === member.user.id
@@ -260,7 +308,7 @@ const Teams: NextPage = () => {
                           </span>
                           <FontAwesomeIcon
                             icon={faCircleChevronRight}
-                            className="text-2xl text-dark"
+                            className="text-xl text-dark"
                           />
                         </div>
                         <p className="p-1"></p>
@@ -271,18 +319,88 @@ const Teams: NextPage = () => {
             ) : null}
           </div>
           <div className="p-2">
-            {selectedMember ? (
+            {isGroupChat && (
               <div className="flex h-full flex-col">
-                <div className="flex w-full items-center justify-between rounded-t-lg bg-starynight/70 py-4 px-6">
+                <div className="flex w-full items-center justify-between rounded-t-lg bg-starynight/70 py-3 px-4">
+                  <div className="flex w-full items-center">
+                    <div className="text-sm font-medium text-neutral">
+                      {selectedTeam?.name}
+                    </div>
+                    <Link
+                      href={`/room/${selectedTeam?.id}`}
+                      className="ml-auto text-xl text-white/80 transition-all hover:text-white"
+                    >
+                      <FontAwesomeIcon icon={faVideo} />
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="grid h-full w-full content-between overflow-y-hidden bg-white/50 p-4 pb-6 ">
+                  <div className=" container grid overflow-y-auto">
+                    {getGroupChat.data &&
+                      getGroupChat.data.map((chat) => (
+                        <div
+                          className={classNames(
+                            "min-w-[120px] px-2 py-1",
+                            chat.senderId === session?.user.id
+                              ? "ml-16 justify-self-end rounded-t-lg rounded-l-lg bg-sky-blue text-dark"
+                              : "mr-16 justify-self-start rounded-b-lg rounded-r-lg bg-dark text-neutral"
+                          )}
+                        >
+                          <div className="flex flex-col text-sm">
+                            <div className="text-xs text-gray-400">
+                              ~ {chat.sender.name?.split(" ")[0]}
+                            </div>
+                            <div className="flex w-full items-end">
+                              <div>{chat.message}</div>
+                              <div className="ml-auto text-xs">
+                                {chat.time.toLocaleTimeString("en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: false,
+                                  hourCycle: "h23",
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  <form
+                    onSubmit={handleSubmit(sendGroupChat)}
+                    ref={messageref}
+                    className="relative grid w-full "
+                  >
+                    <input
+                      {...register("message")}
+                      placeholder="message..."
+                      className="flex w-full items-center rounded-md bg-[#0D253A] px-4 py-2 pr-9 text-sm text-neutral"
+                    ></input>
+                    <button
+                      type="submit"
+                      className="absolute mr-1 self-center justify-self-end bg-[#0D253A] p-2"
+                    >
+                      <svg
+                        className="right-0 w-4 fill-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 512 512"
+                      >
+                        <path d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+            {selectedMember && (
+              <div className="flex h-full flex-col">
+                <div className="flex w-full items-center justify-between rounded-t-lg bg-starynight/70 py-3 px-4">
                   <div className="flex">
-                    <div className="font-medium text-neutral">
+                    <div className="text-sm font-medium text-neutral">
                       {selectedMember.name}
                     </div>
                   </div>
-                  <FontAwesomeIcon
-                    className="text-xl text-dark"
-                    icon={faVideoCamera}
-                  />
                 </div>
 
                 <div className="grid h-full w-full content-between overflow-y-hidden bg-white/50 p-4 pb-6 ">
@@ -313,7 +431,7 @@ const Teams: NextPage = () => {
                   </div>
 
                   <form
-                    onSubmit={handleSubmit(sendMessage)}
+                    onSubmit={handleSubmit(sendDM)}
                     ref={messageref}
                     className="relative grid w-full "
                   >
@@ -337,7 +455,7 @@ const Teams: NextPage = () => {
                   </form>
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
         </div>
 

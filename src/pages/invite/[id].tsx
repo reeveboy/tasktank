@@ -1,19 +1,11 @@
 import { NextPage } from "next";
-import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { string } from "zod";
 import Layout from "~/Components/Layout";
 import { api } from "~/utils/api";
 
 const Invite: NextPage = () => {
   const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      router.push("/");
-    },
-  });
 
   const inviteId = router.query.id as string;
 
@@ -49,7 +41,7 @@ const Invite: NextPage = () => {
     );
   };
 
-  if (status === "loading" || inviteData.status === "loading") {
+  if (inviteData.status === "loading") {
     return <div>Loading...</div>;
   }
 

@@ -256,7 +256,7 @@ const Project: NextPage = () => {
                   <div
                     onClick={() => selectTeam(team)}
                     className={classNames(
-                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm",
+                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                       selectedTeam?.id === team.id
                         ? "bg-sky-blue"
                         : "bg-white/50"

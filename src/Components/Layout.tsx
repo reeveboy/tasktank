@@ -8,7 +8,6 @@ import {
   faRocket,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
-import { Session } from "next-auth";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/router";

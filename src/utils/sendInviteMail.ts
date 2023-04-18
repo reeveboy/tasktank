@@ -1,5 +1,6 @@
 import sendgrid from "@sendgrid/mail";
 import { env } from "~/env.mjs";
+import { getAbsoluteUrl } from "./getAbsoluteUrl";
 
 sendgrid.setApiKey(env.SENDGRID_API_KEY);
 
@@ -10,7 +11,7 @@ interface IEmailParams {
 }
 
 const sendInviteMail = async (emailParams: IEmailParams) => {
-  const url = `http://localhost:3000/invite/${emailParams.inviteId}`;
+  const url = `${getAbsoluteUrl()}/invite/${emailParams.inviteId}`;
 
   const email = {
     to: emailParams.to,

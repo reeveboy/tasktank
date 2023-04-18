@@ -30,6 +30,23 @@ export const messageRouter = createTRPCRouter({
       return chats;
     }),
 
+  getGroupChat: protectedProcedure
+    .input(z.object({ teamId: z.string().nullish() }))
+    .query(({ input, ctx }) => {
+      if (!input.teamId) {
+        return null;
+      }
+
+      return ctx.prisma.message.findMany({
+        where: {
+          teamId: input.teamId,
+        },
+        include: {
+          sender: true,
+        },
+      });
+    }),
+
   sendDM: protectedProcedure
     .input(
       z.object({
@@ -39,7 +56,7 @@ export const messageRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      if (!ctx.session.user.id || !input.recieverId || !input.message) {
+      if (!ctx.session.user.id || !input.message) {
         return null;
       }
       const chats = await ctx.prisma.message.create({
