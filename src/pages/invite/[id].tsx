@@ -29,7 +29,7 @@ const Invite: NextPage = () => {
           if (data === null) {
             return;
           }
-          router.push(`/teams}`);
+          router.replace(`/teams}`);
         },
       }
     );
@@ -43,7 +43,7 @@ const Invite: NextPage = () => {
           if (data === null) {
             return;
           }
-          router.push(`/teams}`);
+          router.replace(`/teams}`);
         },
       }
     );
@@ -59,7 +59,7 @@ const Invite: NextPage = () => {
         <Head>
           <title>Invitation</title>
         </Head>
-        <Layout session={session} route="Invitation">
+        <Layout>
           <span>Invite not found</span>
         </Layout>
       </>
@@ -71,7 +71,7 @@ const Invite: NextPage = () => {
       <Head>
         <title>Invitation</title>
       </Head>
-      <Layout session={session} route="Invitation">
+      <Layout>
         <div className="grid h-full w-full place-items-center">
           <div className="max-w-md rounded-lg bg-sky-blue p-4">
             <p className="text-lg">

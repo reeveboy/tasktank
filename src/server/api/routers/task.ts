@@ -5,7 +5,12 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 export const taskRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
-      z.object({ name: z.string(), projectId: z.string(), date: z.date() })
+      z.object({
+        name: z.string(),
+        projectId: z.string(),
+        date: z.date(),
+        userId: z.string().nullish(),
+      })
     )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.task.create({
@@ -18,13 +23,14 @@ export const taskRouter = createTRPCRouter({
           },
           user: {
             connect: {
-              id: ctx.session.user.id,
+              id: input.userId ?? ctx.session.user.id,
             },
           },
           date: input.date,
         },
       });
     }),
+
   update: protectedProcedure
     .input(
       z.object({
@@ -96,6 +102,7 @@ export const taskRouter = createTRPCRouter({
       });
       return tasks;
     }),
+
   getProjectTasks: protectedProcedure
     .input(z.object({ projectId: z.string().nullish() }))
     .query(async ({ input, ctx }) => {
@@ -105,9 +112,6 @@ export const taskRouter = createTRPCRouter({
       const tasks = await ctx.prisma.task.findMany({
         where: {
           projectId: input.projectId,
-          user: {
-            id: ctx.session.user.id,
-          },
         },
         include: {
           user: true,
@@ -118,6 +122,7 @@ export const taskRouter = createTRPCRouter({
       });
       return tasks;
     }),
+
   toggleComplete: protectedProcedure
     .input(z.object({ taskId: z.string() }))
     .mutation(async ({ input, ctx }) => {

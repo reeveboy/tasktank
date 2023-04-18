@@ -197,34 +197,26 @@ const Dashboard: NextPage = () => {
               Add task
             </button>
           </div>
-          <div className="mt-4 flex w-full items-center rounded-md border bg-white/50 py-4 px-3 text-sm shadow-sm">
-            <div className="grow">
-              {activeTask ? activeTask?.name : "No task running.."}
-            </div>
-            <p className="p-2"></p>
-            <div>
-              {activeTask ? (
-                <div className="flex items-center">
-                  <div>
-                    <span>{hours.toString().padStart(2, "0")}</span>:
-                    <span>{minutes.toString().padStart(2, "0")}</span>:
-                    <span>{seconds.toString().padStart(2, "0")}</span>
-                  </div>
-                  <p className="p-1"></p>
-                  <button
-                    onClick={handleStopActiveTask}
-                    className="rounded-lg bg-red-500 px-6 py-2 text-neutral"
-                  >
-                    Stop
-                  </button>
+          {activeTask && (
+            <div className="mt-4 flex w-full items-center rounded-md border bg-white/50 py-4 px-3 text-sm shadow-sm">
+              <div className="text-lg">{activeTask.name}</div>
+              <p className="p-2"></p>
+              <div className="ml-auto flex items-center">
+                <div className="text-lg font-semibold">
+                  <span>{hours.toString().padStart(2, "0")}</span>:
+                  <span>{minutes.toString().padStart(2, "0")}</span>:
+                  <span>{seconds.toString().padStart(2, "0")}</span>
                 </div>
-              ) : (
-                <button className="rounded-lg bg-starynight px-6 py-2 text-neutral">
-                  Start a task
+                <p className="p-4"></p>
+                <button
+                  onClick={handleStopActiveTask}
+                  className="rounded-lg bg-red-500 px-6 py-2 text-neutral"
+                >
+                  Stop
                 </button>
-              )}
+              </div>
             </div>
-          </div>
+          )}
           <div className="relative mt-4 w-full overflow-x-auto">
             <table className="w-full text-left text-sm text-gray-500 shadow-lg">
               <thead className="bg-dark text-neutral ">
@@ -289,7 +281,7 @@ const Dashboard: NextPage = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr className="border bg-neutral text-dark">
+                  <tr className="border bg-white/50 text-dark">
                     <th
                       scope="row"
                       className="whitespace-nowrap px-6 py-4 font-medium  "

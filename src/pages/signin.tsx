@@ -12,7 +12,7 @@ const Home: NextPage = () => {
 
   const { data: session, status } = useSession();
   if (session) {
-    router.push("/dashboard");
+    router.push("/tracker");
   }
 
   const { register, handleSubmit, reset } = useForm();
@@ -24,7 +24,7 @@ const Home: NextPage = () => {
       redirect: false,
       email: d.email,
       password: d.password,
-      callbackUrl: "/dashboard",
+      callbackUrl: "/tracker",
     });
 
     if (status?.ok) status.url ? router.push(status.url) : "";
@@ -105,7 +105,7 @@ const Home: NextPage = () => {
 
             <div className="grid w-full grid-cols-2 gap-2">
               <button
-                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                onClick={() => signIn("github", { callbackUrl: "/tracker" })}
                 className="col-span-2 flex items-center justify-center rounded-md border px-3 py-2 transition-all hover:scale-105"
               >
                 <svg

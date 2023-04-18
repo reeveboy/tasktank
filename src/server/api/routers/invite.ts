@@ -87,8 +87,12 @@ export const inviteRouter = createTRPCRouter({
         },
         data: {
           members: {
-            connect: {
-              id: ctx.session.user.id,
+            create: {
+              user: {
+                connect: {
+                  id: ctx.session.user.id,
+                },
+              },
             },
           },
         },

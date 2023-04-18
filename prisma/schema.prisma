@@ -12,13 +12,15 @@ datasource db {
 }
 
 model Team {
-    id        String    @id @default(cuid())
+    id        String         @id @default(cuid())
     name      String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    members   User[]
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    ownerId   String
+    owner     User           @relation(fields: [ownerId], references: [id])
     projects  Project[]
     invites   Invite[]
+    members   UsersOnTeams[]
 }
 
 model Project {
@@ -69,18 +71,28 @@ model Message {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String         @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?        @unique
     emailVerified DateTime?
     image         String?
     password      String?
     accounts      Account[]
     sessions      Session[]
-    teams         Team[]
     tasks         Task[]
     Invite        Invite[]
     messages      Message[]
+    owns          Team[]
+    teams         UsersOnTeams[]
+}
+
+model UsersOnTeams {
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+    team   Team   @relation(fields: [teamId], references: [id])
+    teamId String
+
+    @@id([userId, teamId])
 }
 
 // Necessary for Next auth

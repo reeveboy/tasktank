@@ -34,6 +34,8 @@ const Teams: NextPage = () => {
   const teamMembers = api.team.getTeamMembers.useQuery({
     id: selectedTeam?.id,
   });
+  console.log(teamMembers.data);
+
   const getChats = api.message.getChats.useQuery({
     recieverId: selectedMember?.id,
   });
@@ -101,9 +103,9 @@ const Teams: NextPage = () => {
             <p className="p-1"></p>
             <div
               onClick={() => setShowTeamModal(true)}
-              className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+              className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
             >
-              <span className="text-md grow font-medium text-dark">
+              <span className="grow text-sm font-medium text-dark">
                 Create a team
               </span>
               <FontAwesomeIcon
@@ -118,13 +120,16 @@ const Teams: NextPage = () => {
                   <div
                     onClick={() => selectTeam(team)}
                     className={classNames(
-                      "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                       selectedTeam?.id === team.id
                         ? "bg-sky-blue"
                         : "bg-white/50"
                     )}
                   >
-                    <span className="text-md grow text-dark">{team.name}</span>
+                    <span className="grow text-sm text-dark">
+                      {team.name}{" "}
+                      {team.ownerId === session?.user.id ? "(Owner)" : ""}
+                    </span>
                     <FontAwesomeIcon
                       icon={faCircleChevronRight}
                       className="text-2xl text-dark"
@@ -135,7 +140,7 @@ const Teams: NextPage = () => {
               ))
             ) : (
               <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
-                <span className="text-md grow font-light text-dark">
+                <span className="grow text-sm font-light text-dark">
                   No teams...
                 </span>
               </div>
@@ -150,9 +155,9 @@ const Teams: NextPage = () => {
                 <p className="p-1"></p>
                 <div
                   onClick={() => setShowInviteModal(true)}
-                  className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+                  className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
                 >
-                  <span className="text-md grow font-medium text-dark">
+                  <span className="grow text-sm font-medium text-dark">
                     Invite members
                   </span>
                   <FontAwesomeIcon
@@ -161,26 +166,26 @@ const Teams: NextPage = () => {
                   />
                 </div>
                 <p className="p-2"></p>
-                {teamMembers.data?.length
-                  ? teamMembers.data.map((member) => (
+                {teamMembers.data?.members.length
+                  ? teamMembers.data.members.map((member) => (
                       <>
                         <div
-                          onClick={() => setSelectedMember(member)}
+                          onClick={() => setSelectedMember(member.user)}
                           className={classNames(
                             "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
-                            selectedMember?.id === member.id
+                            selectedMember?.id === member.user.id
                               ? "bg-sky-blue"
                               : "bg-white/50"
                           )}
                         >
                           <img
                             className="h-8 w-8 rounded-full"
-                            src={member.image ? member.image : ""}
+                            src={member.user.image ? member.user.image : ""}
                           />
                           <p className="p-2"></p>
                           <span className="grow text-sm text-dark">
-                            {member.name}{" "}
-                            {member.id === session?.user.id ? "(You)" : ""}
+                            {member.user.name}{" "}
+                            {member.user.id === session?.user.id ? "(You)" : ""}
                           </span>
                           <FontAwesomeIcon
                             icon={faCircleChevronRight}
@@ -223,7 +228,12 @@ const Teams: NextPage = () => {
                           <div className="flex w-fit rounded-b-lg rounded-r-lg bg-[#0D253A] py-1 pl-3 pr-2 text-sm text-slate-200">
                             {chat.message}
                             <div className="flex place-self-end pl-2 pb-0.5 text-xs text-cyan-200">
-                              {chat.time.toISOString().slice(11, 16)}
+                              {chat.time.toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                                hourCycle: "h23",
+                              })}
                             </div>
                           </div>
                           <p className="p-1"></p>

@@ -5,10 +5,19 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 export const projectRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({ name: z.string(), teamId: z.string().nullish() }))
-    .mutation(({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
       if (!input.teamId) {
         return null;
       }
+
+      const team = await ctx.prisma.team.findUnique({
+        where: {
+          id: input.teamId,
+        },
+      });
+
+      if (team?.ownerId !== ctx.session.user.id) return null;
+
       return ctx.prisma.project.create({
         data: {
           name: input.name,
@@ -26,7 +35,7 @@ export const projectRouter = createTRPCRouter({
         team: {
           members: {
             some: {
-              id: ctx.session.user.id,
+              userId: ctx.session.user.id,
             },
           },
         },

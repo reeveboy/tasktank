@@ -1,7 +1,5 @@
 import { NextPage } from "next";
-import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useRouter } from "next/router";
 
 import Layout from "~/Components/Layout";
 import { Modal } from "flowbite-react";
@@ -13,13 +11,14 @@ import {
   faCircleChevronRight,
   faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { useForm } from "react-hook-form";
 import classNames from "classnames";
 import { Team, Project as ProjectType, Prisma } from "@prisma/client";
 import { formatTime } from "~/utils/formatTime";
-import { getToday, getTodayString } from "~/utils/getToday";
+import { getTodayString } from "~/utils/getToday";
+import { useSession } from "next-auth/react";
 
 type TaskWithUsers = Prisma.TaskGetPayload<{
   include: {
@@ -28,6 +27,8 @@ type TaskWithUsers = Prisma.TaskGetPayload<{
 }>;
 
 const Project: NextPage = () => {
+  const { data: session } = useSession();
+
   const [showTeamModal, setShowTeamModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -49,6 +50,9 @@ const Project: NextPage = () => {
     projectId: selectedProject?.id,
   });
   const userProjects = api.project.getUserProjects.useQuery();
+  const teamMembers = api.team.getTeamMembers.useQuery({
+    id: selectedTeam?.id,
+  });
 
   const teamMutation = api.team.create.useMutation();
   const projectMutation = api.project.create.useMutation();
@@ -110,11 +114,14 @@ const Project: NextPage = () => {
   const createTask = (d: any) => {
     if (!d.project || !d.taskName || !d.date) return;
 
+    if (selectedTeam?.ownerId !== session?.user.id) return;
+
     taskMutation.mutate(
       {
         name: d.taskName,
         projectId: d.project,
         date: new Date(d.date),
+        userId: d.member,
       },
       {
         onSuccess: () => {
@@ -142,9 +149,9 @@ const Project: NextPage = () => {
             <p className="p-1"></p>
             <div
               onClick={() => setShowTeamModal(true)}
-              className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+              className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
             >
-              <span className="text-md grow font-medium text-dark">
+              <span className="grow text-sm font-medium text-dark">
                 Create a team
               </span>
               <FontAwesomeIcon
@@ -159,14 +166,15 @@ const Project: NextPage = () => {
                   <div
                     onClick={() => selectTeam(team)}
                     className={classNames(
-                      "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                       selectedTeam?.id === team.id
                         ? "bg-sky-blue"
                         : "bg-white/50"
                     )}
                   >
-                    <span className="text-md grow capitalize text-dark">
-                      {team.name}
+                    <span className="grow text-sm capitalize text-dark">
+                      {team.name}{" "}
+                      {team.ownerId === session?.user.id ? "(Owner)" : ""}
                     </span>
                     <FontAwesomeIcon
                       icon={faCircleChevronRight}
@@ -178,7 +186,7 @@ const Project: NextPage = () => {
               ))
             ) : (
               <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
-                <span className="text-md grow font-light text-dark">
+                <span className="grow text-sm font-light text-dark">
                   No teams...
                 </span>
               </div>
@@ -193,9 +201,9 @@ const Project: NextPage = () => {
                 <p className="p-1"></p>
                 <div
                   onClick={() => setShowProjectModal(true)}
-                  className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+                  className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
                 >
-                  <span className="text-md grow font-medium text-dark">
+                  <span className="grow text-sm font-medium text-dark">
                     Create a Project
                   </span>
                   <FontAwesomeIcon
@@ -210,13 +218,13 @@ const Project: NextPage = () => {
                       <div
                         onClick={() => selectProject(project)}
                         className={classNames(
-                          "flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                          "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                           selectedProject?.id === project.id
                             ? "bg-sky-blue"
                             : "bg-white/50"
                         )}
                       >
-                        <span className="text-md grow capitalize text-dark">
+                        <span className="grow text-sm capitalize text-dark">
                           {project.name}
                         </span>
                         <FontAwesomeIcon
@@ -229,7 +237,7 @@ const Project: NextPage = () => {
                   ))
                 ) : (
                   <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
-                    <span className="text-md grow font-light text-dark">
+                    <span className="grow text-sm font-light text-dark">
                       No Projects...
                     </span>
                   </div>
@@ -245,9 +253,9 @@ const Project: NextPage = () => {
               <p className="p-1"></p>
               <div
                 onClick={() => setShowAddTaskModal(true)}
-                className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
+                className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
               >
-                <span className="text-md grow font-medium text-dark">
+                <span className="grow text-sm font-medium text-dark">
                   Create a task
                 </span>
                 <FontAwesomeIcon
@@ -263,16 +271,14 @@ const Project: NextPage = () => {
                       <div
                         onClick={() => selectTask(task)}
                         className={classNames(
-                          "text-md flex w-full cursor-pointer rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                          "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-sm text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
                           task.competed ? "line-through" : "",
                           selectedTask?.id === task.id
                             ? "bg-sky-blue"
                             : "bg-white/50"
                         )}
                       >
-                        <span className="text-md grow capitalize">
-                          {task.name}
-                        </span>
+                        <span className="grow capitalize">{task.name}</span>
                         <span>{task.user.name}</span>
                       </div>
                       <p className="p-1"></p>
@@ -280,7 +286,7 @@ const Project: NextPage = () => {
                   ))
                 ) : (
                   <div className="flex w-full cursor-pointer rounded-md bg-white/50  px-3 py-2 shadow-sm transition-all hover:scale-[1.01]">
-                    <span className="text-md grow font-light text-dark">
+                    <span className="grow text-sm font-light text-dark">
                       No tasks...
                     </span>
                   </div>
@@ -440,7 +446,6 @@ const Project: NextPage = () => {
               <p className="p-2"></p>
               <div>
                 <span className="text-xs">Date</span>
-
                 <input
                   {...register("date")}
                   className="w-full rounded border border-gray-500 px-3 py-2 text-sm"
@@ -452,7 +457,6 @@ const Project: NextPage = () => {
               <p className="p-2"></p>
               <div>
                 <span className="text-xs">Project {"->"} Team</span>
-
                 <select
                   className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
                   {...register("project")}
@@ -470,6 +474,27 @@ const Project: NextPage = () => {
                   ))}
                 </select>
               </div>
+              {selectedTeam?.ownerId === session?.user.id && (
+                <>
+                  <p className="p-2"></p>
+                  <div>
+                    <span className="text-xs">Assign task to</span>
+                    <select
+                      className="w-full rounded border border-gray-500 px-3 py-2 text-sm shadow"
+                      {...register("member")}
+                    >
+                      <option value="">Select Member</option>
+                      {teamMembers.data?.members.map((member) => (
+                        <option value={member.user.id}>
+                          <div className="flex w-full justify-between">
+                            <span>{member.user.name}</span>
+                          </div>
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-2 gap-2">
                 <button

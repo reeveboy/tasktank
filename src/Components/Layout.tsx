@@ -42,11 +42,11 @@ const Layout: React.FC<props> = ({ children }) => {
         </div>
         <p className="p-2"></p>
         <div className="flex w-full grow flex-col">
-          <Link href={"/dashboard"}>
+          <Link href={"/tracker"}>
             <button
               className={classNames(
                 "flex w-full items-end justify-between rounded px-3 py-2 text-sm font-medium text-sky-blue transition-all hover:scale-[1.05] hover:bg-white/20",
-                router.pathname == "/dashboard"
+                router.pathname == "/tracker"
                   ? "bg-starynight/80"
                   : "bg-white/10"
               )}

@@ -11,7 +11,7 @@ const Home: NextPage = () => {
 
   const { data: session, status } = useSession();
   if (session) {
-    router.push("/dashboard");
+    router.push("/tracker");
   }
 
   const { register, handleSubmit, reset } = useForm();

@@ -9,9 +9,18 @@ export const teamRouter = createTRPCRouter({
       return ctx.prisma.team.create({
         data: {
           name: input.name,
-          members: {
+          owner: {
             connect: {
               id: ctx.session.user.id,
+            },
+          },
+          members: {
+            create: {
+              user: {
+                connect: {
+                  id: ctx.session.user.id,
+                },
+              },
             },
           },
         },
@@ -22,7 +31,7 @@ export const teamRouter = createTRPCRouter({
       where: {
         members: {
           some: {
-            id: ctx.session.user.id,
+            userId: ctx.session.user.id,
           },
         },
       },
@@ -32,15 +41,20 @@ export const teamRouter = createTRPCRouter({
     .input(z.object({ id: z.string().nullish() }))
     .query(({ input, ctx }) => {
       if (!input.id) {
-        return [];
+        return null;
       }
-      return ctx.prisma.team
-        .findUnique({
-          where: {
-            id: input.id,
+      return ctx.prisma.team.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          members: {
+            include: {
+              user: true,
+            },
           },
-        })
-        .members();
+        },
+      });
     }),
 
   // assignToTeam: protectedProcedure.mutation({id})
