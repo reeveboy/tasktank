@@ -27,7 +27,6 @@ const Layout: React.FC<props> = ({ children }) => {
       router.push("/signin");
     },
   });
-  console.log(data);
 
   const user = data?.user;
 

@@ -139,27 +139,29 @@ export const taskRouter = createTRPCRouter({
       });
     }),
 
-  getChartData: protectedProcedure.query(async ({ ctx }) => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 7);
+  getChartData: protectedProcedure
+    .input(z.object({ offset: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - input.offset);
 
-    const data = ctx.prisma.task.groupBy({
-      by: ["date"],
-      where: {
-        date: {
-          lte: endDate,
-          gte: startDate,
+      const data = ctx.prisma.task.groupBy({
+        by: ["date"],
+        where: {
+          date: {
+            lte: endDate,
+            gte: startDate,
+          },
         },
-      },
-      _sum: {
-        timeElapsed: true,
-      },
-      orderBy: {
-        date: "asc",
-      },
-    });
+        _sum: {
+          timeElapsed: true,
+        },
+        orderBy: {
+          date: "asc",
+        },
+      });
 
-    return data;
-  }),
+      return data;
+    }),
 });

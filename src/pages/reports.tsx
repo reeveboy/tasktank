@@ -35,15 +35,17 @@ export const options = {
 };
 
 const Reports: NextPage = () => {
-  const chardata = api.task.getChartData.useQuery();
+  const chardata = api.task.getChartData.useQuery({ offset: 7 });
 
   const labels = chardata.data?.map((d) => d.date.toLocaleDateString());
   const data = {
     labels,
     datasets: [
       {
-        label: "Total Time Elapsed per day",
-        data: chardata.data?.map((d) => d._sum.timeElapsed),
+        label: "Time Completed in Hours",
+        data: chardata.data?.map((d) =>
+          d._sum.timeElapsed ? d._sum.timeElapsed / 60 / 60 : 0
+        ),
         backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
     ],
@@ -55,8 +57,10 @@ const Reports: NextPage = () => {
         <title>Reports</title>
       </Head>
       <Layout>
-        <div className="flex flex-col p-4 text-lg font-semibold">
-          <p className="text-center">Total time completed this week</p>
+        <div className="flex flex-col p-4 text-lg font-medium">
+          <p className="text-center">
+            Total time completed this week (in hours)
+          </p>
           <div className="grid scale-[0.8] place-items-center rounded-lg bg-white/50 px-2 py-4 shadow-lg">
             <Bar options={options} data={data} />
           </div>
