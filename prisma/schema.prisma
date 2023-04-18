@@ -89,7 +89,7 @@ model User {
 model UsersOnTeams {
     user   User   @relation(fields: [userId], references: [id])
     userId String
-    team   Team   @relation(fields: [teamId], references: [id])
+    team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
     teamId String
 
     @@id([userId, teamId])

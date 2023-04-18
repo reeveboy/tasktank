@@ -26,6 +26,53 @@ export const teamRouter = createTRPCRouter({
         },
       });
     }),
+
+  update: protectedProcedure
+    .input(z.object({ id: z.string(), name: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const team = await ctx.prisma.team.findUnique({
+        where: {
+          id: input.id,
+        },
+      });
+
+      if (team?.ownerId !== ctx.session.user.id) {
+        return null;
+      }
+
+      return ctx.prisma.team.update({
+        where: {
+          id: input.id,
+        },
+        data: {
+          name: input.name,
+        },
+      });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const team = await ctx.prisma.team.findUnique({
+        where: {
+          id: input.id,
+        },
+      });
+
+      if (team?.ownerId !== ctx.session.user.id) {
+        return null;
+      }
+
+      return ctx.prisma.team.delete({
+        where: {
+          id: input.id,
+        },
+        include: {
+          members: true,
+        },
+      });
+    }),
+
   getAll: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.team.findMany({
       where: {

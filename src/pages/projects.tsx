@@ -9,6 +9,7 @@ import { api } from "~/utils/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleChevronRight,
+  faPenToSquare,
   faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useState } from "react";
@@ -29,10 +30,12 @@ type TaskWithUsers = Prisma.TaskGetPayload<{
 const Project: NextPage = () => {
   const { data: session } = useSession();
 
-  const [showTeamModal, setShowTeamModal] = useState(false);
-  const [showProjectModal, setShowProjectModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showAddTeamModal, setShowAddTeamModal] = useState(false);
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   const { register, handleSubmit, reset } = useForm();
 
@@ -58,12 +61,21 @@ const Project: NextPage = () => {
   const projectMutation = api.project.create.useMutation();
   const taskMutation = api.task.create.useMutation();
 
+  const teamUpdate = api.team.update.useMutation();
+
+  const teamDelete = api.team.delete.useMutation();
+
   const utils = api.useContext();
 
   const selectTeam = (team: Team) => {
     setSelectedTeam(team);
     setSelectedProject(null);
     setSelectedTask(null);
+  };
+
+  const editTeam = (team: Team) => {
+    setSelectedTeam(team);
+    setShowEditTeamModal(true);
   };
 
   const selectProject = (project: ProjectType) => {
@@ -92,7 +104,41 @@ const Project: NextPage = () => {
         },
       }
     );
-    setShowTeamModal(false);
+    setShowAddTeamModal(false);
+  };
+
+  const updateTeam = (d: any) => {
+    console.log(d);
+    if (!d.newTeamName || !selectedTeam) return;
+
+    teamUpdate.mutate(
+      {
+        id: selectedTeam.id,
+        name: d.newTeamName,
+      },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
+    setShowEditTeamModal(false);
+  };
+
+  const deleteTeam = () => {
+    if (!selectedTeam) return;
+
+    teamDelete.mutate(
+      {
+        id: selectedTeam.id,
+      },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
+    setShowEditTeamModal(false);
   };
 
   const createProject = (d: any) => {
@@ -108,7 +154,7 @@ const Project: NextPage = () => {
         },
       }
     );
-    setShowProjectModal(false);
+    setShowAddProjectModal(false);
   };
 
   const createTask = (d: any) => {
@@ -148,7 +194,7 @@ const Project: NextPage = () => {
             </div>
             <p className="p-1"></p>
             <div
-              onClick={() => setShowTeamModal(true)}
+              onClick={() => setShowAddTeamModal(true)}
               className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
             >
               <span className="grow text-sm font-medium text-dark">
@@ -156,7 +202,7 @@ const Project: NextPage = () => {
               </span>
               <FontAwesomeIcon
                 icon={faPlusCircle}
-                className="text-2xl text-dark"
+                className="text-xl text-dark"
               />
             </div>
             <p className="p-2"></p>
@@ -164,9 +210,8 @@ const Project: NextPage = () => {
               teams.data.map((team) => (
                 <>
                   <div
-                    onClick={() => selectTeam(team)}
                     className={classNames(
-                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm transition-all hover:scale-[1.01]",
+                      "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm",
                       selectedTeam?.id === team.id
                         ? "bg-sky-blue"
                         : "bg-white/50"
@@ -176,9 +221,18 @@ const Project: NextPage = () => {
                       {team.name}{" "}
                       {team.ownerId === session?.user.id ? "(Owner)" : ""}
                     </span>
+                    {team.ownerId === session?.user.id && (
+                      <FontAwesomeIcon
+                        onClick={() => editTeam(team)}
+                        icon={faPenToSquare}
+                        className="text-xl text-dark transition-all hover:scale-105"
+                      />
+                    )}
+                    <p className="p-1"></p>
                     <FontAwesomeIcon
+                      onClick={() => selectTeam(team)}
                       icon={faCircleChevronRight}
-                      className="text-2xl text-dark"
+                      className="text-xl text-dark transition-all hover:scale-105"
                     />
                   </div>
                   <p className="p-1"></p>
@@ -200,7 +254,7 @@ const Project: NextPage = () => {
                 </div>
                 <p className="p-1"></p>
                 <div
-                  onClick={() => setShowProjectModal(true)}
+                  onClick={() => setShowAddProjectModal(true)}
                   className="flex w-full cursor-pointer items-center rounded-md bg-white/50  px-3 py-2 shadow-md transition-all hover:scale-[1.01]"
                 >
                   <span className="grow text-sm font-medium text-dark">
@@ -208,7 +262,7 @@ const Project: NextPage = () => {
                   </span>
                   <FontAwesomeIcon
                     icon={faPlusCircle}
-                    className="text-2xl text-dark"
+                    className="text-xl text-dark"
                   />
                 </div>
                 <p className="p-2"></p>
@@ -229,7 +283,7 @@ const Project: NextPage = () => {
                         </span>
                         <FontAwesomeIcon
                           icon={faCircleChevronRight}
-                          className="text-2xl text-dark"
+                          className="text-xl text-dark"
                         />
                       </div>
                       <p className="p-1"></p>
@@ -260,7 +314,7 @@ const Project: NextPage = () => {
                 </span>
                 <FontAwesomeIcon
                   icon={faPlusCircle}
-                  className="text-2xl text-dark"
+                  className="text-xl text-dark"
                 />
               </div>
               <p className="p-2"></p>
@@ -296,7 +350,7 @@ const Project: NextPage = () => {
           ) : null}
         </div>
 
-        <Modal show={showTeamModal} className="rounded-lg">
+        <Modal show={showAddTeamModal} className="rounded-lg">
           <div className="flex flex-col px-8 py-6">
             <h1 className="text-xl font-semibold text-dark">Create a team</h1>
             <p className="p-2"></p>
@@ -323,7 +377,7 @@ const Project: NextPage = () => {
                 <button
                   type="button"
                   className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
-                  onClick={() => setShowTeamModal(false)}
+                  onClick={() => setShowAddTeamModal(false)}
                 >
                   Close
                 </button>
@@ -332,7 +386,49 @@ const Project: NextPage = () => {
           </div>
         </Modal>
 
-        <Modal show={showProjectModal} className="rounded-lg">
+        <Modal show={showEditTeamModal}>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Edit Team</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(updateTeam)}>
+              <div>
+                <span className="text-xs">Team Name</span>
+                <input
+                  {...register("newTeamName")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  type="text"
+                  minLength={3}
+                  placeholder={selectedTeam?.name}
+                />
+              </div>
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-3 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-dark py-2 text-sm font-light text-neutral"
+                  onClick={deleteTeam}
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowEditTeamModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal show={showAddProjectModal} className="rounded-lg">
           <div className="flex flex-col px-8 py-6">
             <h1 className="text-xl font-bold text-dark">Create a project</h1>
             <p className="p-2"></p>
@@ -359,12 +455,20 @@ const Project: NextPage = () => {
                 <button
                   type="button"
                   className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
-                  onClick={() => setShowProjectModal(false)}
+                  onClick={() => setShowAddProjectModal(false)}
                 >
                   Close
                 </button>
               </div>
             </form>
+          </div>
+        </Modal>
+
+        <Modal show={showEditProjectModal}>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Add Task</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(createTask)}></form>
           </div>
         </Modal>
 
