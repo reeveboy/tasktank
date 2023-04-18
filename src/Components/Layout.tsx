@@ -22,8 +22,8 @@ const Layout: React.FC<props> = ({ children }) => {
   const router = useRouter();
   const { data, status } = useSession({
     required: true,
-    onUnauthenticated() {
-      router.push("/signin");
+    async onUnauthenticated() {
+      await router.push("/signin");
     },
   });
 

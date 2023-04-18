@@ -67,8 +67,8 @@ const Invite: NextPage = () => {
         <div className="grid h-full w-full place-items-center">
           <div className="w-full max-w-md rounded-lg border bg-white/50 p-4 shadow-md">
             <p className="text-md text-center">
-              An Invitation from <b>{inviteData.data?.invitedBy.name}</b> <br />{" "}
-              to join their team <b>{inviteData.data?.team.name}</b>
+              An Invitation from <b>{inviteData.data?.invitedBy.name}</b> <br />
+              &nbsp; to join their team <b>{inviteData.data?.team.name}</b>
             </p>
             <p className="p-2"></p>
             <div className="grid w-full grid-cols-2 gap-2">

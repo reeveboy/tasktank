@@ -219,7 +219,7 @@ const Teams: NextPage = () => {
                     )}
                   >
                     <span className="grow text-sm capitalize text-dark">
-                      {team.name}{" "}
+                      {team.name}&nbsp;
                       {team.ownerId === session?.user.id ? "(Owner)" : ""}
                     </span>
                     {team.ownerId === session?.user.id && (
@@ -303,7 +303,7 @@ const Teams: NextPage = () => {
                           />
                           <p className="p-2"></p>
                           <span className="grow text-sm text-dark">
-                            {member.user.name}{" "}
+                            {member.user.name}&nbsp;
                             {member.user.id === session?.user.id ? "(You)" : ""}
                           </span>
                           <FontAwesomeIcon
@@ -340,6 +340,7 @@ const Teams: NextPage = () => {
                     {getGroupChat.data &&
                       getGroupChat.data.map((chat) => (
                         <div
+                          key={chat.id}
                           className={classNames(
                             "min-w-[120px] px-2 py-1",
                             chat.senderId === session?.user.id
@@ -408,6 +409,7 @@ const Teams: NextPage = () => {
                     {getChats.data &&
                       getChats.data.map((chat) => (
                         <div
+                          key={chat.id}
                           className={classNames(
                             chat.senderId === session?.user.id
                               ? "ml-16 justify-self-end"

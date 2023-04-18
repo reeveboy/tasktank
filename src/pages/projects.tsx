@@ -263,7 +263,7 @@ const Project: NextPage = () => {
                     )}
                   >
                     <span className="grow text-sm capitalize text-dark">
-                      {team.name}{" "}
+                      {team.name}&nbsp;
                       {team.ownerId === session?.user.id ? "(Owner)" : ""}
                     </span>
                     {team.ownerId === session?.user.id && (
@@ -675,10 +675,10 @@ const Project: NextPage = () => {
                 >
                   <option value="">Select Project</option>
                   {userProjects.data?.map((project) => (
-                    <option value={project.id}>
+                    <option value={project.id} key={project.id}>
                       <div className="flex w-full justify-between">
                         <span>
-                          Project {project.name} {"->"}{" "}
+                          Project {project.name} {"->"}&nbsp;
                         </span>
                         <span>Team {project.team.name}</span>
                       </div>
@@ -697,7 +697,7 @@ const Project: NextPage = () => {
                     >
                       <option value="">Select Member</option>
                       {teamMembers.data?.members.map((member) => (
-                        <option value={member.user.id}>
+                        <option value={member.user.id} key={member.userId}>
                           <div className="flex w-full justify-between">
                             <span>{member.user.name}</span>
                           </div>

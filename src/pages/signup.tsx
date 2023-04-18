@@ -124,11 +124,11 @@ const Home: NextPage = () => {
             <p className="p-2"></p>
 
             <p className="text-center text-sm font-light">
-              Already have an account?{" "}
+              Already have an account?&nbsp;
               <span>
                 <Link href={"/signin"}>
-                  {" "}
-                  <span className="text-starynight">Sign In</span>{" "}
+                  &nbsp;
+                  <span className="text-starynight">Sign In</span>&nbsp;
                 </Link>
               </span>
             </p>

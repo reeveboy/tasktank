@@ -90,11 +90,11 @@ const Home: NextPage = () => {
             <p className="p-2"></p>
 
             <p className="text-center text-sm font-light">
-              Don't have an account?{" "}
+              Don&apos;t have an account?&nbsp;
               <span>
                 <Link href={"/signup"}>
-                  {" "}
-                  <span className="text-starynight">Sign Up</span>{" "}
+                  &nbsp;
+                  <span className="text-starynight">Sign Up</span>&nbsp;
                 </Link>
               </span>
             </p>
