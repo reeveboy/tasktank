@@ -29,6 +29,42 @@ export const projectRouter = createTRPCRouter({
         },
       });
     }),
+
+  update: protectedProcedure
+    .input(
+      z.object({ projectId: z.string(), teamId: z.string(), name: z.string() })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const team = await ctx.prisma.team.findUnique({
+        where: { id: input.teamId },
+      });
+
+      if (team?.ownerId !== ctx.session.user.id) {
+        return null;
+      }
+
+      return ctx.prisma.project.update({
+        where: {
+          id: input.projectId,
+        },
+        data: {
+          name: input.name,
+        },
+      });
+    }),
+  delete: protectedProcedure
+    .input(z.object({ projectId: z.string(), teamId: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const team = await ctx.prisma.team.findUnique({
+        where: { id: input.teamId },
+      });
+
+      if (team?.ownerId !== ctx.session.user.id) {
+        return null;
+      }
+
+      return ctx.prisma.project.delete({ where: { id: input.projectId } });
+    }),
   getUserProjects: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.project.findMany({
       where: {
@@ -56,6 +92,9 @@ export const projectRouter = createTRPCRouter({
           team: {
             id: input.teamId,
           },
+        },
+        include: {
+          team: true,
         },
       });
     }),

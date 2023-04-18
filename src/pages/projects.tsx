@@ -11,6 +11,7 @@ import {
   faCircleChevronRight,
   faPenToSquare,
   faPlusCircle,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useState } from "react";
 
@@ -39,7 +40,7 @@ const Project: NextPage = () => {
 
   const { register, handleSubmit, reset } = useForm();
 
-  const [selectedTeam, setSelectedTeam] = useState<Team>();
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>();
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(
     null
   );
@@ -62,8 +63,9 @@ const Project: NextPage = () => {
   const taskMutation = api.task.create.useMutation();
 
   const teamUpdate = api.team.update.useMutation();
-
+  const projectUpdate = api.project.update.useMutation();
   const teamDelete = api.team.delete.useMutation();
+  const projectDelete = api.project.delete.useMutation();
 
   const utils = api.useContext();
 
@@ -76,6 +78,11 @@ const Project: NextPage = () => {
   const editTeam = (team: Team) => {
     setSelectedTeam(team);
     setShowEditTeamModal(true);
+  };
+
+  const editProject = (project: any) => {
+    setSelectedProject(project);
+    setShowEditProjectModal(true);
   };
 
   const selectProject = (project: ProjectType) => {
@@ -139,6 +146,7 @@ const Project: NextPage = () => {
       }
     );
     setShowEditTeamModal(false);
+    setSelectedTeam(null);
   };
 
   const createProject = (d: any) => {
@@ -155,6 +163,42 @@ const Project: NextPage = () => {
       }
     );
     setShowAddProjectModal(false);
+  };
+
+  const updateProject = (d: any) => {
+    console.log(d);
+    if (!d.newProjectName || !selectedTeam || !selectedProject) return;
+
+    projectUpdate.mutate(
+      {
+        projectId: selectedProject.id,
+        teamId: selectedTeam.id,
+        name: d.newProjectName,
+      },
+      {
+        onSuccess: () => {
+          utils.project.getTeamProjects.invalidate();
+        },
+      }
+    );
+    setShowEditProjectModal(false);
+  };
+
+  const deleteProject = (projectId: string | null) => {
+    if (!selectedTeam || !selectedProject || !projectId) return;
+
+    projectDelete.mutate(
+      {
+        projectId: projectId,
+        teamId: selectedTeam.id,
+      },
+      {
+        onSuccess: () => {
+          utils.project.getTeamProjects.invalidate();
+        },
+      }
+    );
+    setShowEditProjectModal(false);
   };
 
   const createTask = (d: any) => {
@@ -210,6 +254,7 @@ const Project: NextPage = () => {
               teams.data.map((team) => (
                 <>
                   <div
+                    onClick={() => selectTeam(team)}
                     className={classNames(
                       "flex w-full cursor-pointer items-center rounded-md px-3 py-2 text-gray-700 shadow-sm",
                       selectedTeam?.id === team.id
@@ -281,6 +326,14 @@ const Project: NextPage = () => {
                         <span className="grow text-sm capitalize text-dark">
                           {project.name}
                         </span>
+                        {project.team.ownerId === session?.user.id && (
+                          <FontAwesomeIcon
+                            onClick={() => editProject(project)}
+                            icon={faPenToSquare}
+                            className="text-xl text-dark transition-all hover:scale-105"
+                          />
+                        )}
+                        <p className="p-1"></p>
                         <FontAwesomeIcon
                           icon={faCircleChevronRight}
                           className="text-xl text-dark"
@@ -402,6 +455,25 @@ const Project: NextPage = () => {
                 />
               </div>
               <p className="p-2"></p>
+
+              <div>
+                <span className="text-xs">Projects</span>
+                {projects.data?.map((project) => (
+                  <>
+                    <div className="flex w-full items-center rounded-md bg-gray-300 px-3 py-2 text-gray-700 shadow-sm">
+                      <span className="text-xs">{project.name}</span>
+                      <FontAwesomeIcon
+                        onClick={() => deleteProject(project.id)}
+                        icon={faTrash}
+                        className="ml-auto cursor-pointer text-lg text-dark transition-all hover:scale-105"
+                      />
+                    </div>
+                    <p className="p-1"></p>
+                  </>
+                ))}
+              </div>
+
+              <p className="p-2"></p>
               <div className="grid w-full grid-cols-3 gap-2">
                 <button
                   className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
@@ -466,9 +538,44 @@ const Project: NextPage = () => {
 
         <Modal show={showEditProjectModal}>
           <div className="flex flex-col px-8 py-6">
-            <p className="text-xl font-semibold text-dark">Add Task</p>
+            <p className="text-xl font-semibold text-dark">Edit Project</p>
             <p className="p-2"></p>
-            <form onSubmit={handleSubmit(createTask)}></form>
+            <form onSubmit={handleSubmit(updateProject)}>
+              <div>
+                <span className="text-xs">Project Name</span>
+                <input
+                  {...register("newProjectName")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  type="text"
+                  minLength={3}
+                  placeholder={selectedProject?.name}
+                />
+              </div>
+
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-3 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-dark py-2 text-sm font-light text-neutral"
+                  onClick={() => deleteProject(selectedProject?.id ?? null)}
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowEditProjectModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
           </div>
         </Modal>
 

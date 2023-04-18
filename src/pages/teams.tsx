@@ -1,5 +1,6 @@
 import {
   faCircleChevronRight,
+  faPenToSquare,
   faPlusCircle,
   faVideoCamera,
 } from "@fortawesome/free-solid-svg-icons";
@@ -25,6 +26,7 @@ const Teams: NextPage = () => {
   const utils = api.useContext();
 
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showEditTeamModal, setShowEditTeamModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -44,11 +46,20 @@ const Teams: NextPage = () => {
   const sendInviteMutation = api.invite.sendInvite.useMutation();
   const sendDMMutation = api.message.sendDM.useMutation();
 
+  const teamUpdate = api.team.update.useMutation();
+
+  const teamDelete = api.team.delete.useMutation();
+
   const messageref = useRef<HTMLFormElement | null>(null);
 
   const selectTeam = (team: Team) => {
     setSelectedTeam(team);
     setSelectedMember(null);
+  };
+
+  const editTeam = (team: Team) => {
+    setSelectedTeam(team);
+    setShowEditTeamModal(true);
   };
 
   const createTeam = (d: any) => {
@@ -61,6 +72,41 @@ const Teams: NextPage = () => {
       }
     );
     setShowTeamModal(false);
+  };
+
+  const updateTeam = (d: any) => {
+    console.log(d);
+    if (!d.newTeamName || !selectedTeam) return;
+
+    teamUpdate.mutate(
+      {
+        id: selectedTeam.id,
+        name: d.newTeamName,
+      },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
+    setShowEditTeamModal(false);
+  };
+
+  const deleteTeam = () => {
+    if (!selectedTeam) return;
+
+    teamDelete.mutate(
+      {
+        id: selectedTeam.id,
+      },
+      {
+        onSuccess: () => {
+          utils.team.getAll.invalidate();
+        },
+      }
+    );
+    setShowEditTeamModal(false);
+    setSelectedTeam(null);
   };
 
   const submitInvite = (d: any) => {
@@ -126,13 +172,22 @@ const Teams: NextPage = () => {
                         : "bg-white/50"
                     )}
                   >
-                    <span className="grow text-sm text-dark">
+                    <span className="grow text-sm capitalize text-dark">
                       {team.name}{" "}
                       {team.ownerId === session?.user.id ? "(Owner)" : ""}
                     </span>
+                    {team.ownerId === session?.user.id && (
+                      <FontAwesomeIcon
+                        onClick={() => editTeam(team)}
+                        icon={faPenToSquare}
+                        className="text-xl text-dark transition-all hover:scale-105"
+                      />
+                    )}
+                    <p className="p-1"></p>
                     <FontAwesomeIcon
+                      onClick={() => selectTeam(team)}
                       icon={faCircleChevronRight}
-                      className="text-2xl text-dark"
+                      className="text-xl text-dark transition-all hover:scale-105"
                     />
                   </div>
                   <p className="p-1"></p>
@@ -298,6 +353,48 @@ const Teams: NextPage = () => {
                   type="button"
                   className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
                   onClick={() => setShowTeamModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+
+        <Modal show={showEditTeamModal}>
+          <div className="flex flex-col px-8 py-6">
+            <p className="text-xl font-semibold text-dark">Edit Team</p>
+            <p className="p-2"></p>
+            <form onSubmit={handleSubmit(updateTeam)}>
+              <div>
+                <span className="text-xs">Team Name</span>
+                <input
+                  {...register("newTeamName")}
+                  className="w-full rounded border border-gray-500 px-3 py-2 pr-9 text-sm shadow"
+                  type="text"
+                  minLength={3}
+                  placeholder={selectedTeam?.name}
+                />
+              </div>
+              <p className="p-2"></p>
+              <div className="grid w-full grid-cols-3 gap-2">
+                <button
+                  className="w-full rounded-lg bg-starynight py-2 text-sm font-light text-neutral"
+                  type="submit"
+                >
+                  Submit
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-dark py-2 text-sm font-light text-neutral"
+                  onClick={deleteTeam}
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral"
+                  onClick={() => setShowEditTeamModal(false)}
                 >
                   Close
                 </button>
