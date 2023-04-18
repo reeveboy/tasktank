@@ -240,6 +240,7 @@ const Dashboard: NextPage = () => {
                 {tasks.data?.length ? (
                   tasks.data?.map((task) => (
                     <tr
+                      key={task.id}
                       className={classNames(
                         "border bg-white/50 capitalize text-dark",
                         task.competed ? "line-through" : ""
@@ -356,12 +357,13 @@ const Dashboard: NextPage = () => {
                   >
                     {projects.data?.map((project) => (
                       <option
+                        key={project.id}
                         selected={project.id == selectedTask?.projectId}
                         value={project.id}
                       >
                         <div className="flex w-full justify-between">
                           <span>
-                            {project.name} {"->"}{" "}
+                            {project.name} {"->"}&nbsp;
                           </span>
                           <span>{project.team.name}</span>
                         </div>
@@ -433,10 +435,10 @@ const Dashboard: NextPage = () => {
                 >
                   <option value="">Select Project</option>
                   {projects.data?.map((project) => (
-                    <option value={project.id}>
+                    <option value={project.id} key={project.id}>
                       <div className="flex w-full justify-between">
                         <span>
-                          Project {project.name} {"->"}{" "}
+                          Project {project.name} {"->"}&nbsp;
                         </span>
                         <span>Team {project.team.name}</span>
                       </div>
