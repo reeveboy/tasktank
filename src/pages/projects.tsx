@@ -454,6 +454,7 @@ const Project: NextPage = () => {
                   placeholder={selectedTeam?.name}
                 />
               </div>
+
               <p className="p-2"></p>
 
               <div>

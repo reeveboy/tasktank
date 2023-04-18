@@ -73,6 +73,27 @@ export const teamRouter = createTRPCRouter({
       });
     }),
 
+  removeMember: protectedProcedure
+    .input(z.object({ memberId: z.string(), teamId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const team = await ctx.prisma.team.findUnique({
+        where: { id: input.teamId },
+      });
+
+      if (team?.ownerId === input.memberId) {
+        return null;
+      }
+
+      return ctx.prisma.usersOnTeams.delete({
+        where: {
+          userId_teamId: {
+            teamId: input.teamId,
+            userId: input.memberId,
+          },
+        },
+      });
+    }),
+
   getAll: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.team.findMany({
       where: {

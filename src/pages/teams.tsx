@@ -2,6 +2,7 @@ import {
   faCircleChevronRight,
   faPenToSquare,
   faPlusCircle,
+  faTrash,
   faVideoCamera,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -36,7 +37,6 @@ const Teams: NextPage = () => {
   const teamMembers = api.team.getTeamMembers.useQuery({
     id: selectedTeam?.id,
   });
-  console.log(teamMembers.data);
 
   const getChats = api.message.getChats.useQuery({
     recieverId: selectedMember?.id,
@@ -47,8 +47,8 @@ const Teams: NextPage = () => {
   const sendDMMutation = api.message.sendDM.useMutation();
 
   const teamUpdate = api.team.update.useMutation();
-
   const teamDelete = api.team.delete.useMutation();
+  const teamRemoveMember = api.team.removeMember.useMutation();
 
   const messageref = useRef<HTMLFormElement | null>(null);
 
@@ -107,6 +107,22 @@ const Teams: NextPage = () => {
     );
     setShowEditTeamModal(false);
     setSelectedTeam(null);
+  };
+
+  const removeMember = (memberId: string) => {
+    if (!selectedTeam || !memberId) return;
+
+    teamRemoveMember.mutate(
+      {
+        memberId: memberId,
+        teamId: selectedTeam.id,
+      },
+      {
+        onSuccess: () => {
+          utils.team.getTeamMembers.invalidate();
+        },
+      }
+    );
   };
 
   const submitInvite = (d: any) => {
@@ -376,6 +392,28 @@ const Teams: NextPage = () => {
                   placeholder={selectedTeam?.name}
                 />
               </div>
+
+              <p className="p-2"></p>
+
+              <div>
+                <span className="text-xs">Members</span>
+                {teamMembers.data?.members?.map((member) => (
+                  <>
+                    <div className="flex w-full items-center rounded-md bg-gray-300 px-3 py-2 text-gray-700 shadow-sm">
+                      <span className="text-xs">{member.user.name}</span>
+                      {session?.user.id !== member.userId && (
+                        <FontAwesomeIcon
+                          onClick={() => removeMember(member.userId)}
+                          icon={faTrash}
+                          className="ml-auto cursor-pointer text-lg text-dark transition-all hover:scale-105"
+                        />
+                      )}
+                    </div>
+                    <p className="p-1"></p>
+                  </>
+                ))}
+              </div>
+
               <p className="p-2"></p>
               <div className="grid w-full grid-cols-3 gap-2">
                 <button

@@ -29,7 +29,7 @@ const Invite: NextPage = () => {
           if (data === null) {
             return;
           }
-          router.replace(`/teams}`);
+          router.replace(`/teams`);
         },
       }
     );
@@ -73,22 +73,22 @@ const Invite: NextPage = () => {
       </Head>
       <Layout>
         <div className="grid h-full w-full place-items-center">
-          <div className="max-w-md rounded-lg bg-sky-blue p-4">
-            <p className="text-lg">
-              Invitation from <b>{inviteData.data?.invitedBy.name}</b> to join
-              their team <b>{inviteData.data?.team.name}</b>
+          <div className="w-full max-w-md rounded-lg border bg-white/50 p-4 shadow-md">
+            <p className="text-md text-center">
+              An Invitation from <b>{inviteData.data?.invitedBy.name}</b> <br />{" "}
+              to join their team <b>{inviteData.data?.team.name}</b>
             </p>
             <p className="p-2"></p>
-            <div className="flex w-full justify-around">
+            <div className="grid w-full grid-cols-2 gap-2">
               <button
                 onClick={accept}
-                className="rounded-lg bg-emerald-400 px-3 py-3"
+                className="rounded-lg bg-starynight py-2 text-sm text-neutral shadow transition-all hover:bg-starynight/80"
               >
                 Accept invite
               </button>
               <button
                 onClick={decline}
-                className="rounded-lg bg-red-400 px-3 py-3"
+                className="w-full rounded-lg bg-red-500 py-2 text-sm font-light text-neutral transition-all hover:bg-red-400"
               >
                 Decline invite
               </button>
