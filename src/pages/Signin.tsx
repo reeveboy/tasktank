@@ -8,7 +8,7 @@ function Signin() {
                 <h1 className='font-bold text-2xl w-fit'>SignIn</h1>
                 
                 <p className='p-2'></p>
-                <p className='text-center'>Hey, Enter your details to get sign<br/>in to your account</p>
+                <p className='text-center'>Enter your details to sign in<br/>in to your account</p>
                 <p className='p-2'></p>
 
 
