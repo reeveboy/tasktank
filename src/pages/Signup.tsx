@@ -8,7 +8,7 @@ function Signup() {
                 <h1 className='font-bold text-2xl w-fit'>SignUp</h1>
                 
                 <p className='p-2'></p>
-                <p className='text-center'>Hey, Enter your details to get sign<br/>up to your account</p>
+                <p className='text-center'>Enter your details to sign up<br/>up to your account</p>
                 <p className='p-2'></p>
 
                 <div className='w-full relative p-0 grid '>
